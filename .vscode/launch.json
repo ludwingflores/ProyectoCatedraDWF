@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-UcaCfcConnectApplication<uca-cfc-connect>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ucacfc.connect.UcaCfcConnectApplication",
+            "projectName": "uca-cfc-connect",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
