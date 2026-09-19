@@ -1,25 +1,36 @@
 package com.ucacfc.connect.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "inscripcion")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Inscripcion {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "El cliente es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cliente cliente;
 
+    @NotNull(message = "El curso es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "curso_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Curso curso;
 
+    @NotNull(message = "La fecha de inscripción es obligatoria")
     @Column(nullable = false)
     private LocalDate fecha;
 
+    @NotNull(message = "El estado de la inscripción es obligatorio")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EstadoInscripcion estado = EstadoInscripcion.PENDIENTE;

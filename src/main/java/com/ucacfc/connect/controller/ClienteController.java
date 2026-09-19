@@ -4,6 +4,7 @@ import com.ucacfc.connect.model.Cliente;
 import com.ucacfc.connect.service.ClienteService;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +30,12 @@ public class ClienteController {
     }
 
     @PostMapping
-    public ResponseEntity<Cliente> create(@RequestBody Cliente entity) {
+    public ResponseEntity<Cliente> create(@Valid @RequestBody Cliente entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> update(@PathVariable Long id, @RequestBody Cliente entity) {
+    public ResponseEntity<Cliente> update(@PathVariable Long id, @Valid @RequestBody Cliente entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

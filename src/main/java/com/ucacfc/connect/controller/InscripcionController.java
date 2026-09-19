@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Inscripcion;
 import com.ucacfc.connect.service.InscripcionService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,12 @@ public class InscripcionController {
     }
 
     @PostMapping
-    public ResponseEntity<Inscripcion> create(@RequestBody Inscripcion entity) {
+    public ResponseEntity<Inscripcion> create(@Valid @RequestBody Inscripcion entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Inscripcion> update(@PathVariable Long id, @RequestBody Inscripcion entity) {
+    public ResponseEntity<Inscripcion> update(@PathVariable Long id, @Valid @RequestBody Inscripcion entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

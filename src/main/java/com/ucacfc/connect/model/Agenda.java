@@ -1,15 +1,24 @@
 package com.ucacfc.connect.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "agenda")
 public class Agenda {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El título del evento es obligatorio")
+    @Size(max = 150, message = "El título no puede superar los 150 caracteres")
     @Column(nullable = false, length = 150)
     private String titulo;
 
@@ -20,12 +29,14 @@ public class Agenda {
     private LocalTime horaInicio;
     private LocalTime horaFin;
 
+    @NotNull(message = "El tipo de evento es obligatorio")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private TipoEvento tipo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "espacio_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Espacio espacio;
 
     public Agenda() {}
