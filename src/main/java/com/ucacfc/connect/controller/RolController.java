@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Rol;
 import com.ucacfc.connect.service.RolService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class RolController {
     }
 
     @PostMapping
-    public ResponseEntity<Rol> create(@RequestBody Rol entity) {
+    public ResponseEntity<Rol> create(@Valid @RequestBody Rol entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Rol> update(@PathVariable Long id, @RequestBody Rol entity) {
+    public ResponseEntity<Rol> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Rol entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

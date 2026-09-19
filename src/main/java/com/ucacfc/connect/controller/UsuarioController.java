@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Usuario;
 import com.ucacfc.connect.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> create(@RequestBody Usuario entity) {
+    public ResponseEntity<Usuario> create(@Valid @RequestBody Usuario entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(@PathVariable Long id, @RequestBody Usuario entity) {
+    public ResponseEntity<Usuario> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Usuario entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

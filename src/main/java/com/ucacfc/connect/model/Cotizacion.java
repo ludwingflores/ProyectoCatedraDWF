@@ -1,20 +1,27 @@
 package com.ucacfc.connect.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "cotizacion")
 public class Cotizacion {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "El cliente es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
-
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cliente cliente;
 
+    @NotNull(message = "La fecha de cotización es obligatoria")
     @Column(nullable = false)
     private LocalDate fecha;
 
@@ -30,16 +37,47 @@ public class Cotizacion {
 
     public Cotizacion() {}
 
-    public Long getId() { return id; }
-    public Cliente getCliente() { return cliente; }
-    public LocalDate getFecha() { return fecha; }
-    public String getDescripcion() { return descripcion; }
-    public BigDecimal getMonto() { return monto; }
-    public EstadoCotizacion getEstado() { return estado; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setCliente(Cliente v) { cliente = v; }
-    public void setFecha(LocalDate v) { fecha = v; }
-    public void setDescripcion(String v) { descripcion = v; }
-    public void setMonto(BigDecimal v) { monto = v; }
-    public void setEstado(EstadoCotizacion v) { estado = v; }
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public BigDecimal getMonto() {
+        return monto;
+    }
+
+    public EstadoCotizacion getEstado() {
+        return estado;
+    }
+
+    public void setCliente(Cliente v) {
+        cliente = v;
+    }
+
+    public void setFecha(LocalDate v) {
+        fecha = v;
+    }
+
+    public void setDescripcion(String v) {
+        descripcion = v;
+    }
+
+    public void setMonto(BigDecimal v) {
+        monto = v;
+    }
+
+    public void setEstado(EstadoCotizacion v) {
+        estado = v;
+    }
 }

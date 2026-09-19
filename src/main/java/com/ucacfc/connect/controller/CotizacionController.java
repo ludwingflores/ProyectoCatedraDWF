@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Cotizacion;
 import com.ucacfc.connect.service.CotizacionService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class CotizacionController {
     }
 
     @PostMapping
-    public ResponseEntity<Cotizacion> create(@RequestBody Cotizacion entity) {
+    public ResponseEntity<Cotizacion> create(@Valid @RequestBody Cotizacion entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cotizacion> update(@PathVariable Long id, @RequestBody Cotizacion entity) {
+    public ResponseEntity<Cotizacion> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Cotizacion entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

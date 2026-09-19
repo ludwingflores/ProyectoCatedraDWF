@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Diplomado;
 import com.ucacfc.connect.service.DiplomadoService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -35,12 +36,12 @@ public class DiplomadoController {
     }
 
     @PostMapping
-    public ResponseEntity<Diplomado> create(@RequestBody Diplomado entity) {
+    public ResponseEntity<Diplomado> create(@Valid @RequestBody Diplomado entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Diplomado> update(@PathVariable Long id, @RequestBody Diplomado entity) {
+    public ResponseEntity<Diplomado> update(@PathVariable Long id, @Valid @RequestBody Diplomado entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

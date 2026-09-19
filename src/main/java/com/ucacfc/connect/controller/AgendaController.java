@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Agenda;
 import com.ucacfc.connect.service.AgendaService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class AgendaController {
     }
 
     @PostMapping
-    public ResponseEntity<Agenda> create(@RequestBody Agenda entity) {
+    public ResponseEntity<Agenda> create(@Valid @RequestBody Agenda entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Agenda> update(@PathVariable Long id, @RequestBody Agenda entity) {
+    public ResponseEntity<Agenda> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Agenda entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 
