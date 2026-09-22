@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Pago;
 import com.ucacfc.connect.service.PagoService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class PagoController {
     }
 
     @PostMapping
-    public ResponseEntity<Pago> create(@RequestBody Pago entity) {
+    public ResponseEntity<Pago> create(@Valid @RequestBody Pago entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Pago> update(@PathVariable Long id, @RequestBody Pago entity) {
+    public ResponseEntity<Pago> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Pago entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

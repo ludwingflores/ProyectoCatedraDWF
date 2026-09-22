@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Catering;
 import com.ucacfc.connect.service.CateringService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class CateringController {
     }
 
     @PostMapping
-    public ResponseEntity<Catering> create(@RequestBody Catering entity) {
+    public ResponseEntity<Catering> create(@Valid @RequestBody Catering entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Catering> update(@PathVariable Long id, @RequestBody Catering entity) {
+    public ResponseEntity<Catering> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Catering entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

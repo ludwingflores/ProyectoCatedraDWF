@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Espacio;
 import com.ucacfc.connect.service.EspacioService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,14 @@ public class EspacioController {
     }
 
     @PostMapping
-    public ResponseEntity<Espacio> create(@RequestBody Espacio entity) {
+    public ResponseEntity<Espacio> create(@Valid @RequestBody Espacio entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Espacio> update(@PathVariable Long id, @RequestBody Espacio entity) {
+    public ResponseEntity<Espacio> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Espacio entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

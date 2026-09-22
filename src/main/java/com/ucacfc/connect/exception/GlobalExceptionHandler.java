@@ -31,10 +31,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
-    }
+     @ExceptionHandler(Exception.class)
+     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+    return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
+      }
 
     private ResponseEntity<Map<String, Object>> build(HttpStatus status, String message) {
         Map<String, Object> body = new LinkedHashMap<>();

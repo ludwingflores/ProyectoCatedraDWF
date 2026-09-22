@@ -1,31 +1,56 @@
 package com.ucacfc.connect.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "diplomado")
 public class Diplomado {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El nombre del diplomado es obligatorio")
+    @Size(max = 150, message = "El nombre no puede superar los 150 caracteres")
     @Column(nullable = false, length = 150)
     private String nombre;
+
+    @Size(max = 100, message = "La categoría no puede superar los 100 caracteres")
     private String categoria;
+
+    @Size(max = 50, message = "La modalidad no puede superar los 50 caracteres")
     private String modalidad;
+
+    @Size(max = 150, message = "El docente no puede superar los 150 caracteres")
     private String docente;
 
+    @NotNull(message = "El cupo máximo es obligatorio")
+    @Min(value = 1, message = "El cupo máximo debe ser mayor que cero")
     @Column(name = "cupo_maximo", nullable = false)
     private Integer cupoMaximo;
 
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
+
+    @Size(max = 100, message = "El horario no puede superar los 100 caracteres")
     private String horario;
-    
+
+    @NotNull(message = "El costo es obligatorio")
+    @DecimalMin(value = "0.00", message = "El costo no puede ser negativo")
+    @Digits(integer = 8, fraction = 2, message = "El costo debe tener como máximo 8 dígitos enteros y 2 decimales")
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal costo;
 
+    @NotNull(message = "El estado activo es obligatorio")
     @Column(nullable = false)
     private Boolean activo = true;
 

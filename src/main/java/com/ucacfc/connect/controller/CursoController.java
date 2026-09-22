@@ -2,6 +2,7 @@ package com.ucacfc.connect.controller;
 
 import com.ucacfc.connect.model.Curso;
 import com.ucacfc.connect.service.CursoService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -35,12 +36,12 @@ public class CursoController {
     }
 
     @PostMapping
-    public ResponseEntity<Curso> create(@RequestBody Curso entity) {
+    public ResponseEntity<Curso> create(@Valid @RequestBody Curso entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Curso> update(@PathVariable Long id, @RequestBody Curso entity) {
+    public ResponseEntity<Curso> update(@PathVariable Long id, @Valid @RequestBody Curso entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 
