@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class ClienteService {
 
     private final ClienteRepository repository;

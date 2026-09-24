@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class CursoService {
 
     private final CursoRepository repository;

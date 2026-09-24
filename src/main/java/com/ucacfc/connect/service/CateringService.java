@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class CateringService {
 
     private final CateringRepository repository;
@@ -31,6 +32,7 @@ public class CateringService {
                 .orElseThrow(() -> new ResourceNotFoundException("Catering no encontrado con id: " + id));
     }
 
+    
     public Catering save(Catering entity) {
         return repository.save(entity);
     }
