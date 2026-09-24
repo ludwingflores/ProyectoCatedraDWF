@@ -1,0 +1,34 @@
+package  com.ucacfc.connect.service;
+
+import com.ucacfc.connect.exception.ResourceNotFoundException;
+import com.ucacfc.connect.repository.CateringRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class CateringServiceTest {
+
+    @Mock
+    private CateringRepository cateringRepository;
+
+    @InjectMocks
+    private CateringService cateringService;
+
+    @Test
+    public void testFindById_NoEncontrado() {
+        Long IdInexistente = 99L;
+        when(cateringRepository.findById(IdInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            cateringService.findById(IdInexistente);
+        });
+    }
+}
