@@ -37,9 +37,7 @@ public class PagoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Pago> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Pago entity) {
+    public ResponseEntity<Pago> update(@PathVariable Long id, @Valid @RequestBody Pago entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

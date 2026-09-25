@@ -16,8 +16,11 @@ public class Cotizacion {
     private Long id;
 
     @NotNull(message = "El cliente es obligatorio")
+    // Relacion de muchos a uno, muchas cotizaciones las puede realizar un solo cliente
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
+    // Hibernate utiliza objetos especiales para manejar relaciones LAZY, esos objetos pueden contener propiedades internas
+    // @JsonIgnoreProperties evita que esas propiedades internas de Hibernate interfieran con el JSON
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cliente cliente;
 
@@ -25,12 +28,16 @@ public class Cotizacion {
     @Column(nullable = false)
     private LocalDate fecha;
 
+    // @Column(columnDefinition = "TEXT") le indica a hibernate que la columna de la BD debe usar el tipo de dato TEXT
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
+    // @Column configura como se almacenara el valor en la base de datos, precision = 10 es igual a 10 numeros y scale 2
+    // toma los ultimos 2 numeros de esos 10 ingresados como decimales
     @Column(precision = 10, scale = 2)
     private BigDecimal monto;
 
+    // EstadoCotizacion es un Enum, le dice a java que guarde el ENUM como texto en la base de datos
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EstadoCotizacion estado = EstadoCotizacion.PENDIENTE;

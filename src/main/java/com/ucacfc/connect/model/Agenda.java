@@ -22,20 +22,26 @@ public class Agenda {
     @Column(nullable = false, length = 150)
     private String titulo;
 
+    // @Column(columnDefinition = "TEXT") le indica a hibernate que la columna de la BD debe usar el tipo de dato TEXT
     @Column(columnDefinition = "TEXT")
     private String descripcion;
-
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;
 
     @NotNull(message = "El tipo de evento es obligatorio")
+    // TipoEvento es un Enum, le dice a java que guarde el ENUM como texto en la base de datos
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private TipoEvento tipo;
 
+    // Relacion de Muchos a uno con 'Espacio', muchas agendas pueden ser para un espacio
+    // Hibernate puede traer inicialmente solo la informacion de la agenda, y con FetchType.LAZY le dice
+    // que cargue el Espacio solo si realmente necesita la informacion
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "espacio_id")
+    // Hibernate utiliza objetos especiales para manejar relaciones LAZY, esos objetos pueden contener propiedades internas
+    // @JsonIgnoreProperties evita que esas propiedades internas de Hibernate interfieran con el JSON
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Espacio espacio;
 

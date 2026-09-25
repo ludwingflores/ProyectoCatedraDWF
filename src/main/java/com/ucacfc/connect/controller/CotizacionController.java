@@ -37,9 +37,7 @@ public class CotizacionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cotizacion> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Cotizacion entity) {
+    public ResponseEntity<Cotizacion> update(@PathVariable Long id, @Valid @RequestBody Cotizacion entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

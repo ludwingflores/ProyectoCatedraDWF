@@ -13,16 +13,13 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(
-            ResourceNotFoundException ex
-    ) {
+    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex)
+    {
         return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
-            MethodArgumentNotValidException ex
-    ) {
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex){
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", 400);
@@ -40,26 +37,16 @@ public class GlobalExceptionHandler {
 
     // Errores de reglas de negocio: duplicados, cupos agotados, etc.
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(
-            IllegalArgumentException ex
-    ) {
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(
-            Exception ex
-    ) {
-        return build(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error interno del servidor"
-        );
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        return build(HttpStatus.INTERNAL_SERVER_ERROR,"Error interno del servidor");
     }
 
-    private ResponseEntity<Map<String, Object>> build(
-            HttpStatus status,
-            String message
-    ) {
+    private ResponseEntity<Map<String, Object>> build(HttpStatus status, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());

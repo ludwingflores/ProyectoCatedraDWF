@@ -37,9 +37,7 @@ public class EspacioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Espacio> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Espacio entity) {
+    public ResponseEntity<Espacio> update(@PathVariable Long id, @Valid @RequestBody Espacio entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

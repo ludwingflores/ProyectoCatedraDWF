@@ -37,9 +37,7 @@ public class RolController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Rol> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Rol entity) {
+    public ResponseEntity<Rol> update(@PathVariable Long id, @Valid @RequestBody Rol entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

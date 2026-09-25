@@ -3,6 +3,9 @@ package com.ucacfc.connect.service;
 import com.ucacfc.connect.exception.ResourceNotFoundException;
 import com.ucacfc.connect.model.Agenda;
 import com.ucacfc.connect.repository.AgendaRepository;
+
+import jakarta.validation.constraints.NotNull;
+
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

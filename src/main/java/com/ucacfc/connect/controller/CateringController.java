@@ -37,9 +37,7 @@ public class CateringController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Catering> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Catering entity) {
+    public ResponseEntity<Catering> update(@PathVariable Long id, @Valid @RequestBody Catering entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

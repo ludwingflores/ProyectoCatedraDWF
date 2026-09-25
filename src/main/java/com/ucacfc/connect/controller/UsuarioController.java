@@ -37,9 +37,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Usuario entity) {
+    public ResponseEntity<Usuario> update(@PathVariable Long id, @Valid @RequestBody Usuario entity) {
         return ResponseEntity.ok(service.update(id, entity));
     }
 

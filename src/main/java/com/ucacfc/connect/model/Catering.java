@@ -22,8 +22,11 @@ public class Catering {
     private Long id;
 
     @NotNull(message = "El cliente es obligatorio")
+    // La relacion es muchos a uno, Muchos catering pueden pertenecer a un cliente
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
+    // Hibernate utiliza objetos especiales para manejar relaciones LAZY, esos objetos pueden contener propiedades internas
+    // @JsonIgnoreProperties evita que esas propiedades internas de Hibernate interfieran con el JSON
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cliente cliente;
 
@@ -52,9 +55,12 @@ public class Catering {
     @Column(nullable = false)
     private String lugar;
 
+    // @DecimalMin establece el valor minimo permitido, el valor minimo es 0.00, es decir no puede ser negativo
+    // @Digits establece cuantos digitos puede tener el numero, maximo 8 y con 2 decimales
+    // @Column configura como se almacenara el valor en la base de datos, precision = 10 es igual a 10 numeros y scale 2
+    // toma los ultimos 2 numeros de esos 10 ingresados como decimales
     @DecimalMin(value = "0.00", message = "El costo no puede ser negativo")
-    @Digits(integer = 8, fraction = 2,
-            message = "El costo debe tener como máximo 8 dígitos enteros y 2 decimales")
+    @Digits(integer = 8, fraction = 2, message = "El costo debe tener como máximo 8 dígitos enteros y 2 decimales")
     @Column(precision = 10, scale = 2)
     private BigDecimal costo;
 
