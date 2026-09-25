@@ -3,6 +3,9 @@ package com.ucacfc.connect.service;
 import com.ucacfc.connect.exception.ResourceNotFoundException;
 import com.ucacfc.connect.model.Usuario;
 import com.ucacfc.connect.repository.UsuarioRepository;
+
+import java.util.List;
+
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,17 +21,13 @@ public class UsuarioService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Usuario> findAll(int page, int size, String sortBy, String direction) {
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-        return repository.findAll(PageRequest.of(page, size, sort));
+    public List<Usuario> findAll(){
+        return repository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Usuario findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
     public Usuario save(Usuario entity) {

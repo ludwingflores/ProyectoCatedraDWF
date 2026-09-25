@@ -6,7 +6,10 @@ import com.ucacfc.connect.repository.AgendaRepository;
 
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 import org.springframework.data.domain.*;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,17 +24,13 @@ public class AgendaService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Agenda> findAll(int page, int size, String sortBy, String direction) {
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-        return repository.findAll(PageRequest.of(page, size, sort));
+    public List<Agenda> findAll(){
+        return repository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Agenda findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Agenda no encontrado con id: " + id));
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Agenda no encontrada con id: " + id));
     }
 
     public Agenda save(Agenda entity) {

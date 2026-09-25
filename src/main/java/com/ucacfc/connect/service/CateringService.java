@@ -3,6 +3,9 @@ package com.ucacfc.connect.service;
 import com.ucacfc.connect.exception.ResourceNotFoundException;
 import com.ucacfc.connect.model.Catering;
 import com.ucacfc.connect.repository.CateringRepository;
+
+import java.util.List;
+
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,17 +21,13 @@ public class CateringService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Catering> findAll(int page, int size, String sortBy, String direction) {
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-        return repository.findAll(PageRequest.of(page, size, sort));
+    public List<Catering> findAll(){
+        return repository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Catering findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Catering no encontrado con id: " + id));
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Catering no encontrado con id: " + id));
     }
 
     public Catering save(Catering entity) {
