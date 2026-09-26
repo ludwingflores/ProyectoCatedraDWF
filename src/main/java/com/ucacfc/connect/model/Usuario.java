@@ -1,6 +1,7 @@
 package com.ucacfc.connect.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -29,6 +30,7 @@ public class Usuario {
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(max = 255, message = "La contraseña no puede superar los 255 caracteres")
     @Column(nullable = false, length = 255)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @NotNull(message = "El estado activo es obligatorio")
@@ -41,18 +43,50 @@ public class Usuario {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Rol rol;
 
-    public Usuario() {}
+    public Usuario() {
+    }
 
-    public Long getId() { return id; }
-    public String getNombre() { return nombre; }
-    public String getCorreo() { return correo; }
-    public String getPassword() { return password; }
-    public Boolean getActivo() { return activo; }
-    public Rol getRol() { return rol; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public void setCorreo(String correo) { this.correo = correo; }
-    public void setPassword(String password) { this.password = password; }
-    public void setActivo(Boolean activo) { this.activo = activo; }
-    public void setRol(Rol rol) { this.rol = rol; }
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public Rol getRol() {
+        return rol;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public void setRol(Rol rol) {
+        this.rol = rol;
+    }
 }
