@@ -15,6 +15,8 @@ CREATE TABLE usuario (
     password VARCHAR(255) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     rol_id BIGINT NOT NULL,
+    token_recuperacion VARCHAR(255),
+    token_recuperacion_expira DATETIME,
 
     CONSTRAINT fk_usuario_rol
         FOREIGN KEY (rol_id)

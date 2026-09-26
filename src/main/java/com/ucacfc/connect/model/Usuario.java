@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "usuario")
 public class Usuario {
@@ -43,6 +45,14 @@ public class Usuario {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Rol rol;
 
+    @Column(name = "token_recuperacion", length = 255)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String tokenRecuperacion;
+
+    @Column(name = "token_recuperacion_expira")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private LocalDateTime tokenRecuperacionExpira;
+
     public Usuario() {
     }
 
@@ -70,6 +80,14 @@ public class Usuario {
         return rol;
     }
 
+    public String getTokenRecuperacion() {
+        return tokenRecuperacion;
+    }
+
+    public LocalDateTime getTokenRecuperacionExpira() {
+        return tokenRecuperacionExpira;
+    }
+
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
@@ -88,5 +106,13 @@ public class Usuario {
 
     public void setRol(Rol rol) {
         this.rol = rol;
+    }
+
+    public void setTokenRecuperacion(String tokenRecuperacion) {
+        this.tokenRecuperacion = tokenRecuperacion;
+    }
+
+    public void setTokenRecuperacionExpira(LocalDateTime tokenRecuperacionExpira) {
+        this.tokenRecuperacionExpira = tokenRecuperacionExpira;
     }
 }
