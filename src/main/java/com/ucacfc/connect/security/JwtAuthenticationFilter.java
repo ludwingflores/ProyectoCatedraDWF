@@ -21,13 +21,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
-            UserDetailsService userDetailsService) {
+            UserDetailsService userDetailsService,
+            TokenBlacklistService tokenBlacklistService) {
 
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -45,6 +48,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
+
+        // Un token revocado no puede volver a autenticar al usuario.
+        if (tokenBlacklistService.isRevoked(jwt)) {
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Token revocado"
+            );
+            return;
+        }
 
         try {
             final String correo = jwtService.extractUsername(jwt);
@@ -74,10 +86,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-                 } catch (Exception ignored) {
-    // Un token inválido o expirado no autentica la petición.
-    // Spring Security controla posteriormente el acceso al recurso.
-}
+        } catch (Exception ignored) {
+            // Un token inválido o expirado no autentica la petición.
+            // Spring Security controla posteriormente el acceso al recurso.
+        }
 
         filterChain.doFilter(request, response);
     }
