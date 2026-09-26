@@ -13,13 +13,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/clientes")
-@Tag(name = "Clientes", description = "Endpoints para registro, consulta, actualización y eliminación de clientes.")
+@Tag(
+        name = "Clientes",
+        description = "Endpoints para registro, consulta, actualización y eliminación de clientes."
+)
 public class ClienteController {
 
     private final ClienteService service;
@@ -28,75 +32,211 @@ public class ClienteController {
         this.service = service;
     }
 
-    // Endpoint que trae todos los clientes
-    @Operation(summary = "Listar clientes", description = "Obtiene la lista completa de todos los clientes registrados en el sistema.")
+    // =========================================================
+    // LISTAR CLIENTES
+    // =========================================================
+
+    @Operation(
+            summary = "Listar clientes",
+            description = "ADMIN, RECEPCIONISTA y CONTABILIDAD pueden consultar todos los clientes. CLIENTE consulta únicamente su propio registro."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de clientes obtenida exitosamente", 
-                content = @Content(mediaType = "application/json", 
-                array = @ArraySchema(schema = @Schema(implementation = Cliente.class))))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Clientes obtenidos exitosamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = Cliente.class)
+                            )
+                    )
+            )
     })
     @GetMapping
-    public ResponseEntity<List<Cliente>> findAll() {
+    public ResponseEntity<?> findAll(Authentication authentication) {
+
+        String rol = obtenerRol(authentication);
+
+        if ("CLIENTE".equals(rol)) {
+
+            Cliente cliente =
+                    service.findByCorreo(authentication.getName());
+
+            return ResponseEntity.ok(List.of(cliente));
+        }
+
         return ResponseEntity.ok(service.findAll());
     }
 
 
-    // Endpoint para traer un cliente por su ID
-    @Operation(summary = "Obtener cliente por ID", description = "Retorna el detalle de un cliente específico según su identificador único.")
+    // =========================================================
+    // OBTENER CLIENTE POR ID
+    // =========================================================
+
+    @Operation(
+            summary = "Obtener cliente por ID",
+            description = "Los usuarios administrativos pueden consultar cualquier cliente. CLIENTE solamente puede consultar su propio registro."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Cliente encontrado",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Cliente.class))),
-        @ApiResponse(responseCode = "404", description = "Cliente no encontrado con el ID proporcionado", 
-                content = @Content(mediaType = "application/json"))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Cliente encontrado",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Cliente.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "El cliente no tiene permiso para consultar este registro"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Cliente no encontrado"
+            )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> findById(@Parameter(description = "Identificador único del cliente", example = "1", required = true) @PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+    public ResponseEntity<Cliente> findById(
+            @Parameter(
+                    description = "Identificador único del cliente",
+                    example = "1",
+                    required = true
+            )
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String rol = obtenerRol(authentication);
+
+        Cliente cliente = service.findById(id);
+
+        if ("CLIENTE".equals(rol)
+                && !cliente.getCorreo().equalsIgnoreCase(authentication.getName())) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.ok(cliente);
     }
 
-    // Endpoint para registrar un nuevo cliente
-    @Operation(summary = "Registrar nuevo cliente", description = "Crea un nuevo registro de cliente (persona o empresa) validando sus campos obligatorios.")
+
+    // =========================================================
+    // CREAR CLIENTE
+    // =========================================================
+
+    @Operation(
+            summary = "Registrar nuevo cliente",
+            description = "Crea un nuevo registro de cliente."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Cliente creado exitosamente",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Cliente.class))),
-        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o reglas de negocio infringidas",
-                content = @Content(mediaType = "application/json"))
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Cliente creado exitosamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Cliente.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Datos de entrada inválidos"
+            )
     })
     @PostMapping
-    public ResponseEntity<Cliente> create(@Valid @RequestBody Cliente entity) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
+    public ResponseEntity<Cliente> create(
+            @Valid @RequestBody Cliente entity) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(service.save(entity));
     }
 
-    // Endpoint para actualizar un cliente existente
-    @Operation(summary = "Actualizar cliente", description = "Actualiza los datos de un cliente existente identificado por su ID.")
+
+    // =========================================================
+    // ACTUALIZAR CLIENTE
+    // =========================================================
+
+    @Operation(
+            summary = "Actualizar cliente",
+            description = "Actualiza los datos de un cliente existente."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Cliente actualizado correctamente",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Cliente.class))),
-        @ApiResponse(responseCode = "400", description = "Datos enviados en el cuerpo no válidos",
-                content = @Content(mediaType = "application/json")),
-        @ApiResponse(responseCode = "404", description = "No existe un cliente con el ID especificado",
-                content = @Content(mediaType = "application/json"))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Cliente actualizado correctamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Cliente.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Datos inválidos"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Cliente no encontrado"
+            )
     })
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> update(
-            @Parameter(description = "ID del cliente a modificar", example = "1", required = true)
+            @Parameter(
+                    description = "ID del cliente a modificar",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long id,
             @Valid @RequestBody Cliente entity) {
+
         return ResponseEntity.ok(service.update(id, entity));
     }
 
-    // Endpoint para eliminar un cliente
-    @Operation(summary = "Eliminar cliente", description = "Elimina el registro de un cliente del sistema mediante su ID.")
+
+    // =========================================================
+    // ELIMINAR CLIENTE
+    // =========================================================
+
+    @Operation(
+            summary = "Eliminar cliente",
+            description = "Elimina un cliente mediante su ID."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Cliente eliminado exitosamente"),
-        @ApiResponse(responseCode = "404", description = "Cliente no encontrado para eliminar",
-                content = @Content(mediaType = "application/json"))
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Cliente eliminado exitosamente"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Cliente no encontrado"
+            )
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID del cliente a eliminar", example = "1", required = true)
+            @Parameter(
+                    description = "ID del cliente a eliminar",
+                    example = "1",
+                    required = true
+            )
             @PathVariable Long id) {
+
         service.delete(id);
+
         return ResponseEntity.noContent().build();
+    }
+
+
+    // =========================================================
+    // OBTENER ROL
+    // =========================================================
+
+    private String obtenerRol(Authentication authentication) {
+
+        return authentication.getAuthorities()
+                .stream()
+                .findFirst()
+                .map(authority ->
+                        authority.getAuthority()
+                                .replace("ROLE_", "")
+                )
+                .orElse("");
     }
 }

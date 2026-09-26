@@ -6,7 +6,7 @@ import com.ucacfc.connect.repository.UsuarioRepository;
 
 import java.util.List;
 
-import org.springframework.data.domain.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,41 +15,60 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsuarioService {
 
     private final UsuarioRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository repository) {
+    public UsuarioService(
+            UsuarioRepository repository,
+            PasswordEncoder passwordEncoder) {
+
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
-    public List<Usuario> findAll(){
+    public List<Usuario> findAll() {
         return repository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Usuario findById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Usuario no encontrado con id: " + id
+                        )
+                );
     }
 
     public Usuario save(Usuario entity) {
+
+        entity.setPassword(
+                passwordEncoder.encode(entity.getPassword())
+        );
+
         return repository.save(entity);
     }
 
     public Usuario update(Long id, Usuario entity) {
+
         Usuario current = findById(id);
-        copyFields(current, entity);
+
+        current.setNombre(entity.getNombre());
+        current.setCorreo(entity.getCorreo());
+
+        current.setPassword(
+                passwordEncoder.encode(entity.getPassword())
+        );
+
+        current.setActivo(entity.getActivo());
+        current.setRol(entity.getRol());
+
         return repository.save(current);
     }
 
     public void delete(Long id) {
+
         Usuario current = findById(id);
         repository.delete(current);
-    }
-
-    private void copyFields(Usuario current, Usuario incoming) {
-        current.setNombre(incoming.getNombre());
-        current.setCorreo(incoming.getCorreo());
-        current.setPassword(incoming.getPassword());
-        current.setActivo(incoming.getActivo());
-        current.setRol(incoming.getRol());
     }
 }
