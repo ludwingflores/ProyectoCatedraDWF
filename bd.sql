@@ -99,6 +99,23 @@ CREATE TABLE cotizacion (
         REFERENCES cliente(id)
 );
 
+-- 7.1 DETALLE DE COTIZACIONES
+CREATE TABLE detalle_cotizacion (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cotizacion_id BIGINT NOT NULL,
+    tipo_servicio VARCHAR(30) NOT NULL,
+    servicio_id BIGINT NOT NULL,
+    descripcion VARCHAR(255),
+    cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+
+    CONSTRAINT fk_detalle_cotizacion_cotizacion
+        FOREIGN KEY (cotizacion_id)
+        REFERENCES cotizacion(id)
+        ON DELETE CASCADE
+);
+
 -- 8. ESPACIOS
 CREATE TABLE espacio (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

@@ -2,10 +2,15 @@ package com.ucacfc.connect.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "cotizacion")
@@ -16,11 +21,8 @@ public class Cotizacion {
     private Long id;
 
     @NotNull(message = "El cliente es obligatorio")
-    // Relacion de muchos a uno, muchas cotizaciones las puede realizar un solo cliente
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
-    // Hibernate utiliza objetos especiales para manejar relaciones LAZY, esos objetos pueden contener propiedades internas
-    // @JsonIgnoreProperties evita que esas propiedades internas de Hibernate interfieran con el JSON
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cliente cliente;
 
@@ -28,19 +30,30 @@ public class Cotizacion {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    // @Column(columnDefinition = "TEXT") le indica a hibernate que la columna de la BD debe usar el tipo de dato TEXT
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
-    // @Column configura como se almacenara el valor en la base de datos, precision = 10 es igual a 10 numeros y scale 2
-    // toma los ultimos 2 numeros de esos 10 ingresados como decimales
+    @DecimalMin(value = "0.00", message = "El monto no puede ser negativo")
+    @Digits(
+        integer = 8,
+        fraction = 2,
+        message = "El monto debe tener como máximo 8 dígitos enteros y 2 decimales"
+    )
     @Column(precision = 10, scale = 2)
     private BigDecimal monto;
 
-    // EstadoCotizacion es un Enum, le dice a java que guarde el ENUM como texto en la base de datos
+    @NotNull(message = "El estado de la cotización es obligatorio")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EstadoCotizacion estado = EstadoCotizacion.PENDIENTE;
+
+    @Valid
+    @OneToMany(
+        mappedBy = "cotizacion",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private List<DetalleCotizacion> detalles = new ArrayList<>();
 
     public Cotizacion() {}
 
@@ -68,23 +81,51 @@ public class Cotizacion {
         return estado;
     }
 
-    public void setCliente(Cliente v) {
-        cliente = v;
+    public List<DetalleCotizacion> getDetalles() {
+        return detalles;
     }
 
-    public void setFecha(LocalDate v) {
-        fecha = v;
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
     }
 
-    public void setDescripcion(String v) {
-        descripcion = v;
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
     }
 
-    public void setMonto(BigDecimal v) {
-        monto = v;
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
-    public void setEstado(EstadoCotizacion v) {
-        estado = v;
+    public void setMonto(BigDecimal monto) {
+        this.monto = monto;
+    }
+
+    public void setEstado(EstadoCotizacion estado) {
+        this.estado = estado;
+    }
+
+    public void setDetalles(List<DetalleCotizacion> detalles) {
+        this.detalles.clear();
+
+        if (detalles != null) {
+            for (DetalleCotizacion detalle : detalles) {
+                agregarDetalle(detalle);
+            }
+        }
+    }
+
+    public void agregarDetalle(DetalleCotizacion detalle) {
+        if (detalle != null) {
+            detalle.setCotizacion(this);
+            this.detalles.add(detalle);
+        }
+    }
+
+    public void eliminarDetalle(DetalleCotizacion detalle) {
+        if (detalle != null) {
+            this.detalles.remove(detalle);
+            detalle.setCotizacion(null);
+        }
     }
 }
