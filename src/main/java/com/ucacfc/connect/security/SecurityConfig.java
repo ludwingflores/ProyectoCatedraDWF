@@ -1,5 +1,4 @@
 package com.ucacfc.connect.security;
-
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Bean;
@@ -46,20 +45,24 @@ public class SecurityConfig {
                         // =====================================================
 
                         // Login
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
 
                         // Swagger / OpenAPI
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
-                        ).permitAll()
+                        )
+                        .permitAll()
 
                         // Health check
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health")
+                        .permitAll()
 
                         // Manejo interno de errores
-                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/error")
+                        .permitAll()
 
 
                         // =====================================================
@@ -81,18 +84,22 @@ public class SecurityConfig {
 
                         // Pagos: ADMIN y CONTABILIDAD
                         .requestMatchers("/api/pagos/**")
-                        .hasAnyRole("ADMIN", "CONTABILIDAD")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "CONTABILIDAD"
+                        )
 
 
                         // =====================================================
                         // CONSULTAS OPERATIVAS
                         // =====================================================
 
-                        // ADMIN, RECEPCIONISTA y CONTABILIDAD
+                        // ADMIN, RECEPCIONISTA, CONTABILIDAD y CLIENTE
                         // pueden consultar informacion operativa.
                         //
-                        // CLIENTE no se agrega aqui porque posteriormente
-                        // debemos limitarlo a sus propios registros.
+                        // Los controladores y servicios correspondientes
+                        // limitan al CLIENTE a sus propios registros
+                        // cuando aplica.
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/clientes/**",
@@ -104,19 +111,40 @@ public class SecurityConfig {
                                 "/api/catering/**",
                                 "/api/cotizaciones/**"
                         )
-                                    .hasAnyRole(
-                                  "ADMIN",
-                                 "RECEPCIONISTA",
-                                 "CONTABILIDAD",
-                                 "CLIENTE"
-)
+                        .hasAnyRole(
+                                "ADMIN",
+                                "RECEPCIONISTA",
+                                "CONTABILIDAD",
+                                "CLIENTE"
+                        )
+
+
+                        // =====================================================
+                        // CREACION DE CATERING
+                        // =====================================================
+
+                        // ADMIN y RECEPCIONISTA pueden registrar solicitudes
+                        // para clientes.
+                        //
+                        // CLIENTE puede crear su propia solicitud.
+                        // CateringService obtiene el cliente desde el JWT.
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/catering/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "RECEPCIONISTA",
+                                "CLIENTE"
+                        )
 
 
                         // =====================================================
                         // CREACION DE INFORMACION OPERATIVA
                         // =====================================================
 
-                        // ADMIN y RECEPCIONISTA
+                        // Resto de informacion operativa:
+                        // solamente ADMIN y RECEPCIONISTA.
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/clientes/**",
@@ -125,7 +153,6 @@ public class SecurityConfig {
                                 "/api/diplomados/**",
                                 "/api/espacios/**",
                                 "/api/inscripciones/**",
-                                "/api/catering/**",
                                 "/api/cotizaciones/**"
                         )
                         .hasAnyRole(
@@ -157,7 +184,7 @@ public class SecurityConfig {
 
 
                         // =====================================================
-                        // ELIMINACION
+                        // ELIMINACION DE INFORMACION OPERATIVA
                         // =====================================================
 
                         // Solamente ADMIN puede eliminar informacion operativa.
@@ -176,12 +203,52 @@ public class SecurityConfig {
 
 
                         // =====================================================
+                        // CATALOGO DE SERVICIOS DE CATERING
+                        // =====================================================
+
+                        // ADMIN, RECEPCIONISTA y CLIENTE pueden consultar
+                        // los servicios de catering disponibles.
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/servicios-catering/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "RECEPCIONISTA",
+                                "CLIENTE"
+                        )
+
+                        // Solamente ADMIN puede crear servicios de catering.
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/servicios-catering/**"
+                        )
+                        .hasRole("ADMIN")
+
+                        // Solamente ADMIN puede modificar el catalogo.
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/servicios-catering/**"
+                        )
+                        .hasRole("ADMIN")
+
+                        // DELETE realiza borrado logico del servicio.
+                        // Solamente ADMIN tiene permiso.
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/servicios-catering/**"
+                        )
+                        .hasRole("ADMIN")
+
+
+                        // =====================================================
                         // RESTO DE ENDPOINTS
                         // =====================================================
 
-                        // Todo lo que no haya sido definido anteriormente
+                        // Todo endpoint no definido anteriormente
                         // requiere autenticacion.
-                        .anyRequest().authenticated()
+                        .anyRequest()
+                        .authenticated()
                 )
 
 
@@ -228,7 +295,6 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider())
 
-
                 // JWT antes del filtro de autenticacion estandar
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -239,9 +305,9 @@ public class SecurityConfig {
     }
 
 
-    // =============================================================
+    // =================================================================
     // AUTHENTICATION PROVIDER
-    // =============================================================
+    // =================================================================
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -255,9 +321,9 @@ public class SecurityConfig {
     }
 
 
-    // =============================================================
+    // =================================================================
     // AUTHENTICATION MANAGER
-    // =============================================================
+    // =================================================================
 
     @Bean
     public AuthenticationManager authenticationManager(
@@ -268,13 +334,12 @@ public class SecurityConfig {
     }
 
 
-    // =============================================================
+    // =================================================================
     // PASSWORD ENCODER
-    // =============================================================
+    // =================================================================
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
 }

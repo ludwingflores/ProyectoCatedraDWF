@@ -33,9 +33,6 @@ CREATE TABLE cliente (
     direccion VARCHAR(255)
 );
 
-SELECT * FROM cliente;
-SELECT * FROM pago;
-
 -- 4. CURSOS
 CREATE TABLE curso (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -127,22 +124,36 @@ CREATE TABLE espacio (
     equipamiento TEXT
 );
 
+-- 8.1 SERVICIOS DE CATERING
+CREATE TABLE servicio_catering (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    precio_por_persona DECIMAL(10,2) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 -- 9. CATERING
 CREATE TABLE catering (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     cliente_id BIGINT NOT NULL,
+    servicio_catering_id BIGINT,
     tipo_servicio VARCHAR(100) NOT NULL,
     numero_asistentes INT NOT NULL,
-    menu TEXT,
+    precio_por_persona DECIMAL(10,2) NOT NULL,
+    menu TEXT NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
     lugar VARCHAR(255) NOT NULL,
     costo DECIMAL(10,2),
     estado VARCHAR(30),
-
     CONSTRAINT fk_catering_cliente
-        FOREIGN KEY (cliente_id)
-        REFERENCES cliente(id)
+    FOREIGN KEY (cliente_id)
+    REFERENCES cliente(id),
+
+    CONSTRAINT fk_catering_servicio
+    FOREIGN KEY (servicio_catering_id)
+    REFERENCES servicio_catering(id)
 );
 
 -- 10. AGENDA
