@@ -176,6 +176,7 @@ CREATE TABLE agenda (
 CREATE TABLE pago (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     cliente_id BIGINT NOT NULL,
+    tipo VARCHAR(30) NOT NULL,
     monto DECIMAL(10,2) NOT NULL,
     metodo VARCHAR(50) NOT NULL,
     estado VARCHAR(30) NOT NULL,
