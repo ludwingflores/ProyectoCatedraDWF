@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -15,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableMethodSecurity
@@ -41,6 +41,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // =====================================================
+                        // ENDPOINTS PUBLICOS
+                        // =====================================================
+
                         // Login
                         .requestMatchers("/api/auth/**").permitAll()
 
@@ -51,26 +55,143 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Actuator basico
+                        // Health check
                         .requestMatchers("/actuator/health").permitAll()
+
                         // Manejo interno de errores
                         .requestMatchers("/error").permitAll()
 
-                        // Administración de usuarios y roles
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
-                        .requestMatchers("/api/roles/**").hasRole("ADMIN")
-                        
-                        // Gestión de pagos
+
+                        // =====================================================
+                        // ADMINISTRACION
+                        // =====================================================
+
+                        // Usuarios: solamente ADMIN
+                        .requestMatchers("/api/usuarios/**")
+                        .hasRole("ADMIN")
+
+                        // Roles: solamente ADMIN
+                        .requestMatchers("/api/roles/**")
+                        .hasRole("ADMIN")
+
+
+                        // =====================================================
+                        // PAGOS
+                        // =====================================================
+
+                        // Pagos: ADMIN y CONTABILIDAD
                         .requestMatchers("/api/pagos/**")
                         .hasAnyRole("ADMIN", "CONTABILIDAD")
-                        
-                                        // El resto requiere autenticacion
+
+
+                        // =====================================================
+                        // CONSULTAS OPERATIVAS
+                        // =====================================================
+
+                        // ADMIN, RECEPCIONISTA y CONTABILIDAD
+                        // pueden consultar informacion operativa.
+                        //
+                        // CLIENTE no se agrega aqui porque posteriormente
+                        // debemos limitarlo a sus propios registros.
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/cotizaciones/**"
+                        )
+                                    .hasAnyRole(
+                                  "ADMIN",
+                                 "RECEPCIONISTA",
+                                 "CONTABILIDAD",
+                                 "CLIENTE"
+)
+
+
+                        // =====================================================
+                        // CREACION DE INFORMACION OPERATIVA
+                        // =====================================================
+
+                        // ADMIN y RECEPCIONISTA
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/cotizaciones/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "RECEPCIONISTA"
+                        )
+
+
+                        // =====================================================
+                        // ACTUALIZACION DE INFORMACION OPERATIVA
+                        // =====================================================
+
+                        // ADMIN y RECEPCIONISTA
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/cotizaciones/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "RECEPCIONISTA"
+                        )
+
+
+                        // =====================================================
+                        // ELIMINACION
+                        // =====================================================
+
+                        // Solamente ADMIN puede eliminar informacion operativa.
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/cotizaciones/**"
+                        )
+                        .hasRole("ADMIN")
+
+
+                        // =====================================================
+                        // RESTO DE ENDPOINTS
+                        // =====================================================
+
+                        // Todo lo que no haya sido definido anteriormente
+                        // requiere autenticacion.
                         .anyRequest().authenticated()
                 )
 
+
+                // =============================================================
+                // MANEJO DE ERRORES DE SEGURIDAD
+                // =============================================================
+
                 .exceptionHandling(exception -> exception
 
-                        // No autenticado -> 401
+                        // Usuario no autenticado -> 401
                         .authenticationEntryPoint(
                                 (request, response, authException) ->
                                         response.sendError(
@@ -79,7 +200,7 @@ public class SecurityConfig {
                                         )
                         )
 
-                        // Autenticado pero sin permiso -> 403
+                        // Usuario autenticado sin permisos -> 403
                         .accessDeniedHandler(
                                 (request, response, accessDeniedException) ->
                                         response.sendError(
@@ -89,14 +210,26 @@ public class SecurityConfig {
                         )
                 )
 
+
+                // =============================================================
+                // SESION
+                // =============================================================
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+
+                // =============================================================
+                // AUTENTICACION
+                // =============================================================
+
                 .authenticationProvider(authenticationProvider())
 
+
+                // JWT antes del filtro de autenticacion estandar
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -104,6 +237,11 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
+    // =============================================================
+    // AUTHENTICATION PROVIDER
+    // =============================================================
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -116,6 +254,11 @@ public class SecurityConfig {
         return provider;
     }
 
+
+    // =============================================================
+    // AUTHENTICATION MANAGER
+    // =============================================================
+
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration)
@@ -124,8 +267,14 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
+
+    // =============================================================
+    // PASSWORD ENCODER
+    // =============================================================
+
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 }

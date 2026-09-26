@@ -25,7 +25,22 @@ public class ClienteService {
 
     @Transactional(readOnly = true)
     public Cliente findById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + id));
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cliente no encontrado con id: " + id
+                        )
+                );
+    }
+
+    @Transactional(readOnly = true)
+    public Cliente findByCorreo(String correo) {
+        return repository.findByCorreoIgnoreCase(correo)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cliente no encontrado con correo: " + correo
+                        )
+                );
     }
 
     public Cliente save(Cliente entity) {
