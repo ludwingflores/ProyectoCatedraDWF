@@ -1,7 +1,9 @@
 package com.ucacfc.connect.controller;
 
+import com.ucacfc.connect.dto.HistorialClienteResponse;
 import com.ucacfc.connect.model.Cliente;
 import com.ucacfc.connect.service.ClienteService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -10,7 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,7 +26,7 @@ import java.util.List;
 @RequestMapping("/api/clientes")
 @Tag(
         name = "Clientes",
-        description = "Endpoints para registro, consulta, actualización y eliminación de clientes."
+        description = "Endpoints para registro, consulta, actualización, eliminación e historial de clientes."
 )
 public class ClienteController {
 
@@ -68,6 +72,61 @@ public class ClienteController {
         return ResponseEntity.ok(service.findAll());
     }
 
+    // =========================================================
+    // HISTORIAL DEL CLIENTE
+    // =========================================================
+
+    @Operation(
+            summary = "Consultar historial de un cliente",
+            description = "Consulta de forma consolidada las inscripciones, cotizaciones, alquileres, solicitudes de catering y pagos asociados al cliente."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Historial obtenido exitosamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = HistorialClienteResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "El cliente no tiene permiso para consultar este historial"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Cliente no encontrado"
+            )
+    })
+    @GetMapping("/{id}/historial")
+    public ResponseEntity<HistorialClienteResponse> obtenerHistorial(
+            @Parameter(
+                    description = "Identificador del cliente",
+                    example = "3",
+                    required = true
+            )
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Cliente cliente = service.findById(id);
+
+        String rol = obtenerRol(authentication);
+
+        if ("CLIENTE".equals(rol)
+                && !cliente.getCorreo()
+                        .equalsIgnoreCase(authentication.getName())) {
+
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .build();
+        }
+
+        return ResponseEntity.ok(
+                service.obtenerHistorial(id)
+        );
+    }
 
     // =========================================================
     // OBTENER CLIENTE POR ID
@@ -110,14 +169,16 @@ public class ClienteController {
         Cliente cliente = service.findById(id);
 
         if ("CLIENTE".equals(rol)
-                && !cliente.getCorreo().equalsIgnoreCase(authentication.getName())) {
+                && !cliente.getCorreo()
+                        .equalsIgnoreCase(authentication.getName())) {
 
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .build();
         }
 
         return ResponseEntity.ok(cliente);
     }
-
 
     // =========================================================
     // CREAR CLIENTE
@@ -149,7 +210,6 @@ public class ClienteController {
                 .status(HttpStatus.CREATED)
                 .body(service.save(entity));
     }
-
 
     // =========================================================
     // ACTUALIZAR CLIENTE
@@ -187,9 +247,10 @@ public class ClienteController {
             @PathVariable Long id,
             @Valid @RequestBody Cliente entity) {
 
-        return ResponseEntity.ok(service.update(id, entity));
+        return ResponseEntity.ok(
+                service.update(id, entity)
+        );
     }
-
 
     // =========================================================
     // ELIMINAR CLIENTE
@@ -222,7 +283,6 @@ public class ClienteController {
 
         return ResponseEntity.noContent().build();
     }
-
 
     // =========================================================
     // OBTENER ROL
