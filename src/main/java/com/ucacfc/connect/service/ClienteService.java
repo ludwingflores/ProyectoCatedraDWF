@@ -1,8 +1,14 @@
 package com.ucacfc.connect.service;
 
+import com.ucacfc.connect.dto.HistorialClienteResponse;
 import com.ucacfc.connect.exception.ResourceNotFoundException;
 import com.ucacfc.connect.model.Cliente;
+import com.ucacfc.connect.repository.AlquilerRepository;
+import com.ucacfc.connect.repository.CateringRepository;
 import com.ucacfc.connect.repository.ClienteRepository;
+import com.ucacfc.connect.repository.CotizacionRepository;
+import com.ucacfc.connect.repository.InscripcionRepository;
+import com.ucacfc.connect.repository.PagoRepository;
 
 import java.util.List;
 
@@ -14,9 +20,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class ClienteService {
 
     private final ClienteRepository repository;
+    private final InscripcionRepository inscripcionRepository;
+    private final CotizacionRepository cotizacionRepository;
+    private final AlquilerRepository alquilerRepository;
+    private final CateringRepository cateringRepository;
+    private final PagoRepository pagoRepository;
 
-    public ClienteService(ClienteRepository repository) {
+    public ClienteService(
+            ClienteRepository repository,
+            InscripcionRepository inscripcionRepository,
+            CotizacionRepository cotizacionRepository,
+            AlquilerRepository alquilerRepository,
+            CateringRepository cateringRepository,
+            PagoRepository pagoRepository) {
+
         this.repository = repository;
+        this.inscripcionRepository = inscripcionRepository;
+        this.cotizacionRepository = cotizacionRepository;
+        this.alquilerRepository = alquilerRepository;
+        this.cateringRepository = cateringRepository;
+        this.pagoRepository = pagoRepository;
     }
 
     public List<Cliente> findAll() {
@@ -41,6 +64,27 @@ public class ClienteService {
                                 "Cliente no encontrado con correo: " + correo
                         )
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public HistorialClienteResponse obtenerHistorial(Long clienteId) {
+
+        Cliente cliente = findById(clienteId);
+
+        return new HistorialClienteResponse(
+                cliente,
+                inscripcionRepository.findByClienteIdOrderByFechaDesc(clienteId),
+                cotizacionRepository.findByClienteCorreoIgnoreCase(
+                        cliente.getCorreo()
+                ),
+                alquilerRepository.findByClienteCorreoIgnoreCase(
+                        cliente.getCorreo()
+                ),
+                cateringRepository.findByClienteCorreoIgnoreCase(
+                        cliente.getCorreo()
+                ),
+                pagoRepository.findByClienteIdOrderByFechaDesc(clienteId)
+        );
     }
 
     public Cliente save(Cliente entity) {

@@ -8,6 +8,7 @@ import com.ucacfc.connect.model.TipoPago;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
 public interface PagoRepository extends JpaRepository<Pago, Long> {
 
@@ -27,4 +28,5 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
             Long clienteId,
             Pageable pageable
     );
+    List<Pago> findByClienteIdOrderByFechaDesc(Long clienteId);
 }
