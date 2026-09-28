@@ -90,8 +90,11 @@ public class ClienteController {
                     sortBy: campo utilizado para ordenar.
                     direction: asc o desc.
 
-                    La búsqueda administrativa está disponible para los
-                    roles autorizados por la configuración de seguridad.
+                    Los usuarios administrativos autorizados pueden realizar
+                    búsquedas sobre los clientes registrados.
+
+                    Un usuario con rol CLIENTE únicamente puede consultar
+                    su propio registro.
                     """
     )
     @ApiResponses({
@@ -118,7 +121,32 @@ public class ClienteController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "nombre") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            Authentication authentication) {
+
+        String rol = obtenerRol(authentication);
+
+        /*
+         * Un usuario CLIENTE solamente puede consultar su propio registro.
+         * Los filtros enviados por el cliente se ignoran para impedir
+         * que pueda consultar información perteneciente a terceros.
+         */
+        if ("CLIENTE".equals(rol)) {
+
+            return ResponseEntity.ok(
+                    service.search(
+                            "",
+                            null,
+                            null,
+                            null,
+                            authentication.getName(),
+                            page,
+                            size,
+                            sortBy,
+                            direction
+                    )
+            );
+        }
 
         Page<Cliente> resultado = service.search(
                 nombre,
