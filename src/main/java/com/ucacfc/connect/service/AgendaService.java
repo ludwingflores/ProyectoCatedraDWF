@@ -3,10 +3,15 @@ package com.ucacfc.connect.service;
 import com.ucacfc.connect.exception.ResourceNotFoundException;
 import com.ucacfc.connect.model.Agenda;
 import com.ucacfc.connect.model.Espacio;
+import com.ucacfc.connect.model.TipoEvento;
 import com.ucacfc.connect.repository.AgendaRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +30,10 @@ public class AgendaService {
         this.espacioService = espacioService;
     }
 
+    // =========================================================
+    // CONSULTAS GENERALES
+    // =========================================================
+
     @Transactional(readOnly = true)
     public List<Agenda> findAll() {
         return repository.findAll();
@@ -39,6 +48,63 @@ public class AgendaService {
                         )
                 );
     }
+
+    // =========================================================
+    // FILTROS + PAGINACIÓN + ORDENAMIENTO
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public Page<Agenda> search(
+            String titulo,
+            LocalDate fecha,
+            TipoEvento tipo,
+            Long espacioId,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (titulo != null && !titulo.isBlank()) {
+            return repository.findByTituloContainingIgnoreCase(
+                    titulo,
+                    pageable
+            );
+        }
+
+        if (fecha != null) {
+            return repository.findByFecha(
+                    fecha,
+                    pageable
+            );
+        }
+
+        if (tipo != null) {
+            return repository.findByTipo(
+                    tipo,
+                    pageable
+            );
+        }
+
+        if (espacioId != null) {
+            return repository.findByEspacioId(
+                    espacioId,
+                    pageable
+            );
+        }
+
+        return repository.findAll(pageable);
+    }
+
+    // =========================================================
+    // CREAR
+    // =========================================================
 
     public Agenda save(Agenda entity) {
 
@@ -65,6 +131,10 @@ public class AgendaService {
 
         return repository.save(entity);
     }
+
+    // =========================================================
+    // ACTUALIZAR
+    // =========================================================
 
     public Agenda update(Long id, Agenda entity) {
 
@@ -98,10 +168,20 @@ public class AgendaService {
         return repository.save(current);
     }
 
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
     public void delete(Long id) {
+
         Agenda current = findById(id);
+
         repository.delete(current);
     }
+
+    // =========================================================
+    // VALIDACIONES
+    // =========================================================
 
     private void validarDatosAgenda(Agenda agenda) {
 
@@ -123,7 +203,9 @@ public class AgendaService {
             );
         }
 
-        if (!agenda.getHoraInicio().isBefore(agenda.getHoraFin())) {
+        if (!agenda.getHoraInicio()
+                .isBefore(agenda.getHoraFin())) {
+
             throw new IllegalArgumentException(
                     "La hora de inicio debe ser anterior a la hora de finalización"
             );
@@ -138,16 +220,40 @@ public class AgendaService {
         }
     }
 
+    // =========================================================
+    // COPIAR CAMPOS
+    // =========================================================
+
     private void copyFields(
             Agenda current,
             Agenda incoming) {
 
-        current.setTitulo(incoming.getTitulo());
-        current.setDescripcion(incoming.getDescripcion());
-        current.setFecha(incoming.getFecha());
-        current.setHoraInicio(incoming.getHoraInicio());
-        current.setHoraFin(incoming.getHoraFin());
-        current.setTipo(incoming.getTipo());
-        current.setEspacio(incoming.getEspacio());
+        current.setTitulo(
+                incoming.getTitulo()
+        );
+
+        current.setDescripcion(
+                incoming.getDescripcion()
+        );
+
+        current.setFecha(
+                incoming.getFecha()
+        );
+
+        current.setHoraInicio(
+                incoming.getHoraInicio()
+        );
+
+        current.setHoraFin(
+                incoming.getHoraFin()
+        );
+
+        current.setTipo(
+                incoming.getTipo()
+        );
+
+        current.setEspacio(
+                incoming.getEspacio()
+        );
     }
 }

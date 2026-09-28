@@ -15,6 +15,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,6 +81,114 @@ public class AlquilerService {
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Alquiler no encontrado con id: " + id));
         }
+        // =========================================================
+// FILTROS + PAGINACIÓN + ORDENAMIENTO
+// ADMINISTRACIÓN / RECEPCIÓN
+// =========================================================
+
+@Transactional(readOnly = true)
+public Page<Alquiler> search(
+        Long clienteId,
+        Long espacioId,
+        EstadoAlquiler estado,
+        LocalDate fecha,
+        int page,
+        int size,
+        String sortBy,
+        String direction) {
+
+    Sort sort = direction.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+
+    PageRequest pageable =
+            PageRequest.of(page, size, sort);
+
+    if (clienteId != null) {
+        return repository.findByClienteId(
+                clienteId,
+                pageable
+        );
+    }
+
+    if (espacioId != null) {
+        return repository.findByEspacioId(
+                espacioId,
+                pageable
+        );
+    }
+
+    if (estado != null) {
+        return repository.findByEstado(
+                estado,
+                pageable
+        );
+    }
+
+    if (fecha != null) {
+        return repository.findByFecha(
+                fecha,
+                pageable
+        );
+    }
+
+    return repository.findAll(pageable);
+}
+
+// =========================================================
+// FILTROS DEL CLIENTE AUTENTICADO
+// =========================================================
+
+@Transactional(readOnly = true)
+public Page<Alquiler> searchByClienteCorreo(
+        String correo,
+        Long espacioId,
+        EstadoAlquiler estado,
+        LocalDate fecha,
+        int page,
+        int size,
+        String sortBy,
+        String direction) {
+
+    Sort sort = direction.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+
+    PageRequest pageable =
+            PageRequest.of(page, size, sort);
+
+    if (espacioId != null) {
+        return repository
+                .findByClienteCorreoIgnoreCaseAndEspacioId(
+                        correo,
+                        espacioId,
+                        pageable
+                );
+    }
+
+    if (estado != null) {
+        return repository
+                .findByClienteCorreoIgnoreCaseAndEstado(
+                        correo,
+                        estado,
+                        pageable
+                );
+    }
+
+    if (fecha != null) {
+        return repository
+                .findByClienteCorreoIgnoreCaseAndFecha(
+                        correo,
+                        fecha,
+                        pageable
+                );
+    }
+
+    return repository.findByClienteCorreoIgnoreCase(
+            correo,
+            pageable
+    );
+}
 
         // =========================================================
         // CONSULTAR DISPONIBILIDAD - RF09

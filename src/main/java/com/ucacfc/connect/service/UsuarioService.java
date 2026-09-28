@@ -6,6 +6,9 @@ import com.ucacfc.connect.repository.UsuarioRepository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +41,55 @@ public class UsuarioService {
                                 "Usuario no encontrado con id: " + id
                         )
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Usuario> search(
+            String nombre,
+            String correo,
+            Long rolId,
+            Boolean activo,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (nombre != null && !nombre.isBlank()) {
+            return repository.findByNombreContainingIgnoreCase(
+                    nombre,
+                    pageable
+            );
+        }
+
+        if (correo != null && !correo.isBlank()) {
+            return repository.findByCorreoContainingIgnoreCase(
+                    correo,
+                    pageable
+            );
+        }
+
+        if (rolId != null) {
+            return repository.findByRolId(
+                    rolId,
+                    pageable
+            );
+        }
+
+        if (activo != null) {
+            return repository.findByActivo(
+                    activo,
+                    pageable
+            );
+        }
+
+        return repository.findAll(pageable);
     }
 
     public Usuario save(Usuario entity) {

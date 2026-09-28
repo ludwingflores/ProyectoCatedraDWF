@@ -6,7 +6,9 @@ import com.ucacfc.connect.repository.RolRepository;
 
 import java.util.List;
 
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +23,43 @@ public class RolService {
     }
 
     @Transactional(readOnly = true)
-    public List<Rol> findAll(){
+    public List<Rol> findAll() {
         return repository.findAll();
     }
 
     @Transactional(readOnly = true)
     public Rol findById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con id: " + id));
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Rol no encontrado con id: " + id
+                        )
+                );
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Rol> search(
+            String nombre,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (nombre != null && !nombre.isBlank()) {
+            return repository.findByNombreContainingIgnoreCase(
+                    nombre,
+                    pageable
+            );
+        }
+
+        return repository.findAll(pageable);
     }
 
     public Rol save(Rol entity) {
@@ -35,17 +67,25 @@ public class RolService {
     }
 
     public Rol update(Long id, Rol entity) {
+
         Rol current = findById(id);
+
         copyFields(current, entity);
+
         return repository.save(current);
     }
 
     public void delete(Long id) {
+
         Rol current = findById(id);
+
         repository.delete(current);
     }
 
-    private void copyFields(Rol current, Rol incoming) {
+    private void copyFields(
+            Rol current,
+            Rol incoming) {
+
         current.setNombre(incoming.getNombre());
     }
 }

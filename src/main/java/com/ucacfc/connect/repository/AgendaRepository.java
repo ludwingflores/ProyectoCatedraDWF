@@ -1,15 +1,46 @@
 package com.ucacfc.connect.repository;
 
 import com.ucacfc.connect.model.Agenda;
+import com.ucacfc.connect.model.TipoEvento;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface AgendaRepository extends JpaRepository<Agenda, Long> {
+
+    // =========================================================
+    // FILTROS + PAGINACIÓN
+    // =========================================================
+
+    Page<Agenda> findByTituloContainingIgnoreCase(
+            String titulo,
+            Pageable pageable
+    );
+
+    Page<Agenda> findByFecha(
+            LocalDate fecha,
+            Pageable pageable
+    );
+
+    Page<Agenda> findByTipo(
+            TipoEvento tipo,
+            Pageable pageable
+    );
+
+    Page<Agenda> findByEspacioId(
+            Long espacioId,
+            Pageable pageable
+    );
+
+    // =========================================================
+    // VALIDACIÓN DE CONFLICTOS
+    // =========================================================
 
     /*
      * Comprueba si existe otra agenda que utilice el mismo espacio,

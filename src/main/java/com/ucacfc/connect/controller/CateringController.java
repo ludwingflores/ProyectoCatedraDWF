@@ -14,6 +14,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.time.LocalDate;
+
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,11 +63,90 @@ public class CateringController {
 
         if (esCliente(authentication)) {
             return service.findAllByClienteCorreo(
-                    authentication.getName()
-            );
+                    authentication.getName());
         }
 
         return service.findAll();
+    }
+        // =========================================================
+    // FILTROS + PAGINACIÓN + ORDENAMIENTO
+    // =========================================================
+
+    @Operation(
+        summary = "Buscar catering",
+        description = """
+            Permite consultar solicitudes de catering aplicando filtros por
+            cliente, servicio de catering, tipo de servicio, estado o fecha,
+            además de paginación y ordenamiento.
+
+            Los usuarios con rol CLIENTE únicamente pueden consultar
+            sus propias solicitudes de catering.
+            """
+    )
+    @GetMapping("/buscar")
+    public ResponseEntity<Page<Catering>> search(
+            @RequestParam(required = false)
+            Long clienteId,
+
+            @RequestParam(required = false)
+            Long servicioCateringId,
+
+            @RequestParam(required = false)
+            String tipoServicio,
+
+            @RequestParam(required = false)
+            String estado,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fecha,
+
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            int size,
+
+            @RequestParam(defaultValue = "fecha")
+            String sortBy,
+
+            @RequestParam(defaultValue = "desc")
+            String direction,
+
+            Authentication authentication) {
+
+        if (esCliente(authentication)) {
+
+            Page<Catering> resultado =
+                    service.searchByClienteCorreo(
+                            authentication.getName(),
+                            servicioCateringId,
+                            tipoServicio,
+                            estado,
+                            fecha,
+                            page,
+                            size,
+                            sortBy,
+                            direction
+                    );
+
+            return ResponseEntity.ok(resultado);
+        }
+
+        Page<Catering> resultado =
+                service.search(
+                        clienteId,
+                        servicioCateringId,
+                        tipoServicio,
+                        estado,
+                        fecha,
+                        page,
+                        size,
+                        sortBy,
+                        direction
+                );
+
+        return ResponseEntity.ok(resultado);
     }
 
     // =========================================================
