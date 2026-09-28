@@ -12,6 +12,9 @@ import com.ucacfc.connect.repository.PagoRepository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,12 +45,82 @@ public class ClienteService {
         this.pagoRepository = pagoRepository;
     }
 
+    // =========================================================
+    // LISTAR CLIENTES
+    // =========================================================
+
+    @Transactional(readOnly = true)
     public List<Cliente> findAll() {
         return repository.findAll();
     }
 
+    // =========================================================
+    // BÚSQUEDA + FILTROS + PAGINACIÓN + ORDENAMIENTO
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public Page<Cliente> search(
+            String nombre,
+            String dui,
+            String nit,
+            String empresa,
+            String correo,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable = PageRequest.of(
+                page,
+                size,
+                sort
+        );
+
+        if (dui != null && !dui.isBlank()) {
+            return repository.findByDuiContainingIgnoreCase(
+                    dui.trim(),
+                    pageable
+            );
+        }
+
+        if (nit != null && !nit.isBlank()) {
+            return repository.findByNitContainingIgnoreCase(
+                    nit.trim(),
+                    pageable
+            );
+        }
+
+        if (empresa != null && !empresa.isBlank()) {
+            return repository.findByEmpresaContainingIgnoreCase(
+                    empresa.trim(),
+                    pageable
+            );
+        }
+
+        if (correo != null && !correo.isBlank()) {
+            return repository.findByCorreoContainingIgnoreCase(
+                    correo.trim(),
+                    pageable
+            );
+        }
+
+        return repository.findByNombreContainingIgnoreCase(
+                nombre == null ? "" : nombre.trim(),
+                pageable
+        );
+    }
+
+    // =========================================================
+    // OBTENER CLIENTE POR ID
+    // =========================================================
+
     @Transactional(readOnly = true)
     public Cliente findById(Long id) {
+
         return repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -56,8 +129,13 @@ public class ClienteService {
                 );
     }
 
+    // =========================================================
+    // OBTENER CLIENTE POR CORREO
+    // =========================================================
+
     @Transactional(readOnly = true)
     public Cliente findByCorreo(String correo) {
+
         return repository.findByCorreoIgnoreCase(correo)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -66,6 +144,10 @@ public class ClienteService {
                 );
     }
 
+    // =========================================================
+    // HISTORIAL DEL CLIENTE - RF14
+    // =========================================================
+
     @Transactional(readOnly = true)
     public HistorialClienteResponse obtenerHistorial(Long clienteId) {
 
@@ -73,7 +155,9 @@ public class ClienteService {
 
         return new HistorialClienteResponse(
                 cliente,
-                inscripcionRepository.findByClienteIdOrderByFechaDesc(clienteId),
+                inscripcionRepository.findByClienteIdOrderByFechaDesc(
+                        clienteId
+                ),
                 cotizacionRepository.findByClienteCorreoIgnoreCase(
                         cliente.getCorreo()
                 ),
@@ -83,26 +167,52 @@ public class ClienteService {
                 cateringRepository.findByClienteCorreoIgnoreCase(
                         cliente.getCorreo()
                 ),
-                pagoRepository.findByClienteIdOrderByFechaDesc(clienteId)
+                pagoRepository.findByClienteIdOrderByFechaDesc(
+                        clienteId
+                )
         );
     }
+
+    // =========================================================
+    // CREAR CLIENTE
+    // =========================================================
 
     public Cliente save(Cliente entity) {
         return repository.save(entity);
     }
 
+    // =========================================================
+    // ACTUALIZAR CLIENTE
+    // =========================================================
+
     public Cliente update(Long id, Cliente entity) {
+
         Cliente current = findById(id);
+
         copyFields(current, entity);
+
         return repository.save(current);
     }
 
+    // =========================================================
+    // ELIMINAR CLIENTE
+    // =========================================================
+
     public void delete(Long id) {
+
         Cliente current = findById(id);
+
         repository.delete(current);
     }
 
-    private void copyFields(Cliente current, Cliente incoming) {
+    // =========================================================
+    // COPIAR CAMPOS
+    // =========================================================
+
+    private void copyFields(
+            Cliente current,
+            Cliente incoming) {
+
         current.setDui(incoming.getDui());
         current.setNit(incoming.getNit());
         current.setNombre(incoming.getNombre());

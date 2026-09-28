@@ -13,6 +13,9 @@ import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -73,7 +76,136 @@ public class CateringService {
                         )
                 );
     }
+    // =========================================================
+    // FILTROS + PAGINACIÓN + ORDENAMIENTO
+    // =========================================================
 
+    @Transactional(readOnly = true)
+    public Page<Catering> search(
+            Long clienteId,
+            Long servicioCateringId,
+            String tipoServicio,
+            String estado,
+            java.time.LocalDate fecha,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (clienteId != null) {
+            return repository.findByClienteId(
+                    clienteId,
+                    pageable
+            );
+        }
+
+        if (servicioCateringId != null) {
+            return repository.findByServicioCateringId(
+                    servicioCateringId,
+                    pageable
+            );
+        }
+
+        if (tipoServicio != null
+                && !tipoServicio.isBlank()) {
+
+            return repository
+                    .findByTipoServicioContainingIgnoreCase(
+                            tipoServicio,
+                            pageable
+                    );
+        }
+
+        if (estado != null
+                && !estado.isBlank()) {
+
+            return repository.findByEstadoIgnoreCase(
+                    estado,
+                    pageable
+            );
+        }
+
+        if (fecha != null) {
+            return repository.findByFecha(
+                    fecha,
+                    pageable
+            );
+        }
+
+        return repository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Catering> searchByClienteCorreo(
+            String correo,
+            Long servicioCateringId,
+            String tipoServicio,
+            String estado,
+            java.time.LocalDate fecha,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (servicioCateringId != null) {
+            return repository
+                    .findByClienteCorreoIgnoreCaseAndServicioCateringId(
+                            correo,
+                            servicioCateringId,
+                            pageable
+                    );
+        }
+
+        if (tipoServicio != null
+                && !tipoServicio.isBlank()) {
+
+            return repository
+                    .findByClienteCorreoIgnoreCaseAndTipoServicioContainingIgnoreCase(
+                            correo,
+                            tipoServicio,
+                            pageable
+                    );
+        }
+
+        if (estado != null
+                && !estado.isBlank()) {
+
+            return repository
+                    .findByClienteCorreoIgnoreCaseAndEstadoIgnoreCase(
+                            correo,
+                            estado,
+                            pageable
+                    );
+        }
+
+        if (fecha != null) {
+            return repository
+                    .findByClienteCorreoIgnoreCaseAndFecha(
+                            correo,
+                            fecha,
+                            pageable
+                    );
+        }
+
+        return repository.findByClienteCorreoIgnoreCase(
+                correo,
+                pageable
+        );
+    }
     // =========================================================
     // CREAR
     // =========================================================

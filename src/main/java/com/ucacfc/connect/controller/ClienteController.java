@@ -15,18 +15,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/clientes")
 @Tag(
         name = "Clientes",
-        description = "Endpoints para registro, consulta, actualización, eliminación e historial de clientes."
+        description = "Endpoints para registro, consulta, búsqueda, actualización, eliminación e historial de clientes."
 )
 public class ClienteController {
 
@@ -45,16 +46,16 @@ public class ClienteController {
             description = "ADMIN, RECEPCIONISTA y CONTABILIDAD pueden consultar todos los clientes. CLIENTE consulta únicamente su propio registro."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Clientes obtenidos exitosamente",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(
-                                    schema = @Schema(implementation = Cliente.class)
-                            )
-                    )
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "Clientes obtenidos exitosamente",
+                content = @Content(
+                        mediaType = "application/json",
+                        array = @ArraySchema(
+                                schema = @Schema(implementation = Cliente.class)
+                        )
+                )
+        )
     })
     @GetMapping
     public ResponseEntity<?> findAll(Authentication authentication) {
@@ -73,7 +74,69 @@ public class ClienteController {
     }
 
     // =========================================================
-    // HISTORIAL DEL CLIENTE
+    // BÚSQUEDA + FILTROS + PAGINACIÓN + ORDENAMIENTO
+    // =========================================================
+
+    @Operation(
+            summary = "Buscar clientes",
+            description = """
+                    Permite buscar clientes utilizando nombre, DUI, NIT,
+                    empresa o correo.
+
+                    Incluye paginación y ordenamiento.
+
+                    page: número de página comenzando desde 0.
+                    size: cantidad de registros por página.
+                    sortBy: campo utilizado para ordenar.
+                    direction: asc o desc.
+
+                    La búsqueda administrativa está disponible para los
+                    roles autorizados por la configuración de seguridad.
+                    """
+    )
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Búsqueda realizada exitosamente"
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Parámetros de búsqueda, paginación u ordenamiento inválidos"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "El usuario no posee permisos para realizar esta búsqueda"
+        )
+    })
+    @GetMapping("/buscar")
+    public ResponseEntity<Page<Cliente>> search(
+            @RequestParam(defaultValue = "") String nombre,
+            @RequestParam(required = false) String dui,
+            @RequestParam(required = false) String nit,
+            @RequestParam(required = false) String empresa,
+            @RequestParam(required = false) String correo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        Page<Cliente> resultado = service.search(
+                nombre,
+                dui,
+                nit,
+                empresa,
+                correo,
+                page,
+                size,
+                sortBy,
+                direction
+        );
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    // =========================================================
+    // HISTORIAL DEL CLIENTE - RF14
     // =========================================================
 
     @Operation(
@@ -81,24 +144,24 @@ public class ClienteController {
             description = "Consulta de forma consolidada las inscripciones, cotizaciones, alquileres, solicitudes de catering y pagos asociados al cliente."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Historial obtenido exitosamente",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(
-                                    implementation = HistorialClienteResponse.class
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "El cliente no tiene permiso para consultar este historial"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Cliente no encontrado"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "Historial obtenido exitosamente",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(
+                                implementation = HistorialClienteResponse.class
+                        )
+                )
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "El cliente no tiene permiso para consultar este historial"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Cliente no encontrado"
+        )
     })
     @GetMapping("/{id}/historial")
     public ResponseEntity<HistorialClienteResponse> obtenerHistorial(
@@ -137,22 +200,22 @@ public class ClienteController {
             description = "Los usuarios administrativos pueden consultar cualquier cliente. CLIENTE solamente puede consultar su propio registro."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Cliente encontrado",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Cliente.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "El cliente no tiene permiso para consultar este registro"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Cliente no encontrado"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "Cliente encontrado",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Cliente.class)
+                )
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "El cliente no tiene permiso para consultar este registro"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Cliente no encontrado"
+        )
     })
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> findById(
@@ -189,18 +252,18 @@ public class ClienteController {
             description = "Crea un nuevo registro de cliente."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Cliente creado exitosamente",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Cliente.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Datos de entrada inválidos"
-            )
+        @ApiResponse(
+                responseCode = "201",
+                description = "Cliente creado exitosamente",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Cliente.class)
+                )
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Datos de entrada inválidos"
+        )
     })
     @PostMapping
     public ResponseEntity<Cliente> create(
@@ -220,22 +283,22 @@ public class ClienteController {
             description = "Actualiza los datos de un cliente existente."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Cliente actualizado correctamente",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Cliente.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Datos inválidos"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Cliente no encontrado"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "Cliente actualizado correctamente",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Cliente.class)
+                )
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Datos inválidos"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Cliente no encontrado"
+        )
     })
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> update(
@@ -261,14 +324,14 @@ public class ClienteController {
             description = "Elimina un cliente mediante su ID."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Cliente eliminado exitosamente"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Cliente no encontrado"
-            )
+        @ApiResponse(
+                responseCode = "204",
+                description = "Cliente eliminado exitosamente"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Cliente no encontrado"
+        )
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(

@@ -12,9 +12,13 @@ import com.ucacfc.connect.model.EstadoCotizacion;
 import com.ucacfc.connect.repository.CotizacionRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +49,10 @@ public class CotizacionService {
         this.cateringService = cateringService;
     }
 
+    // =========================================================
+    // CONSULTAS GENERALES
+    // =========================================================
+
     @Transactional(readOnly = true)
     public List<Cotizacion> findAll() {
         return repository.findAll();
@@ -52,67 +60,206 @@ public class CotizacionService {
 
     @Transactional(readOnly = true)
     public Cotizacion findById(Long id) {
-            return repository.findById(id)
-                            .orElseThrow(() -> new ResourceNotFoundException(
-                                            "Cotización no encontrada con id: " + id));
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cotización no encontrada con id: " + id
+                        )
+                );
     }
-    @Transactional(readOnly = true)
-public List<Cotizacion> findAllByClienteCorreo(String correo) {
-    return repository.findByClienteCorreoIgnoreCase(correo);
-}
 
-@Transactional(readOnly = true)
-public Cotizacion findByIdAndClienteCorreo(Long id, String correo) {
-    return repository.findByIdAndClienteCorreoIgnoreCase(id, correo)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Cotización no encontrada con id: " + id
-                    )
+    // =========================================================
+    // CONSULTAS DEL CLIENTE AUTENTICADO
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<Cotizacion> findAllByClienteCorreo(
+            String correo) {
+
+        return repository.findByClienteCorreoIgnoreCase(correo);
+    }
+
+    @Transactional(readOnly = true)
+    public Cotizacion findByIdAndClienteCorreo(
+            Long id,
+            String correo) {
+
+        return repository
+                .findByIdAndClienteCorreoIgnoreCase(id, correo)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cotización no encontrada con id: " + id
+                        )
+                );
+    }
+
+    // =========================================================
+    // FILTROS + PAGINACIÓN + ORDENAMIENTO
+    // ADMINISTRACIÓN / RECEPCIÓN
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public Page<Cotizacion> search(
+            Long clienteId,
+            EstadoCotizacion estado,
+            LocalDate fecha,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (clienteId != null) {
+            return repository.findByClienteId(
+                    clienteId,
+                    pageable
             );
-}
+        }
+
+        if (estado != null) {
+            return repository.findByEstado(
+                    estado,
+                    pageable
+            );
+        }
+
+        if (fecha != null) {
+            return repository.findByFecha(
+                    fecha,
+                    pageable
+            );
+        }
+
+        return repository.findAll(pageable);
+    }
+
+    // =========================================================
+    // FILTROS DEL CLIENTE AUTENTICADO
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public Page<Cotizacion> searchByClienteCorreo(
+            String correo,
+            EstadoCotizacion estado,
+            LocalDate fecha,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageable =
+                PageRequest.of(page, size, sort);
+
+        if (estado != null) {
+            return repository
+                    .findByClienteCorreoIgnoreCaseAndEstado(
+                            correo,
+                            estado,
+                            pageable
+                    );
+        }
+
+        if (fecha != null) {
+            return repository
+                    .findByClienteCorreoIgnoreCaseAndFecha(
+                            correo,
+                            fecha,
+                            pageable
+                    );
+        }
+
+        return repository.findByClienteCorreoIgnoreCase(
+                correo,
+                pageable
+        );
+    }
+
+    // =========================================================
+    // CREAR COTIZACIÓN
+    // =========================================================
 
     public Cotizacion save(Cotizacion entity) {
+
         validarCliente(entity);
         prepararDetalles(entity);
 
         if (entity.getEstado() == null) {
-            entity.setEstado(EstadoCotizacion.PENDIENTE);
+            entity.setEstado(
+                    EstadoCotizacion.PENDIENTE
+            );
         }
 
         return repository.save(entity);
     }
 
-    public Cotizacion update(Long id, Cotizacion incoming) {
+    // =========================================================
+    // ACTUALIZAR COTIZACIÓN
+    // =========================================================
+
+    public Cotizacion update(
+            Long id,
+            Cotizacion incoming) {
+
         Cotizacion current = findById(id);
 
         validarCliente(incoming);
 
         current.setCliente(incoming.getCliente());
         current.setFecha(incoming.getFecha());
-        current.setDescripcion(incoming.getDescripcion());
+        current.setDescripcion(
+                incoming.getDescripcion()
+        );
 
         if (incoming.getEstado() != null) {
-            current.setEstado(incoming.getEstado());
+            current.setEstado(
+                    incoming.getEstado()
+            );
         }
 
-        List<DetalleCotizacion> detalles = new ArrayList<>();
+        List<DetalleCotizacion> detalles =
+                new ArrayList<>();
 
         if (incoming.getDetalles() != null) {
-            detalles.addAll(incoming.getDetalles());
+            detalles.addAll(
+                    incoming.getDetalles()
+            );
         }
 
         current.setDetalles(detalles);
+
         prepararDetalles(current);
 
         return repository.save(current);
     }
 
+    // =========================================================
+    // ELIMINAR COTIZACIÓN
+    // =========================================================
+
     public void delete(Long id) {
+
         Cotizacion current = findById(id);
+
         repository.delete(current);
     }
 
-    private void validarCliente(Cotizacion cotizacion) {
+    // =========================================================
+    // VALIDAR CLIENTE
+    // =========================================================
+
+    private void validarCliente(
+            Cotizacion cotizacion) {
+
         if (cotizacion.getCliente() == null ||
                 cotizacion.getCliente().getId() == null) {
 
@@ -121,14 +268,23 @@ public Cotizacion findByIdAndClienteCorreo(Long id, String correo) {
             );
         }
 
-        Cliente cliente = clienteService.findById(
-                cotizacion.getCliente().getId()
-        );
+        Cliente cliente =
+                clienteService.findById(
+                        cotizacion
+                                .getCliente()
+                                .getId()
+                );
 
         cotizacion.setCliente(cliente);
     }
 
-    private void prepararDetalles(Cotizacion cotizacion) {
+    // =========================================================
+    // PREPARAR Y CALCULAR DETALLES
+    // =========================================================
+
+    private void prepararDetalles(
+            Cotizacion cotizacion) {
+
         if (cotizacion.getDetalles() == null ||
                 cotizacion.getDetalles().isEmpty()) {
 
@@ -137,17 +293,21 @@ public Cotizacion findByIdAndClienteCorreo(Long id, String correo) {
             );
         }
 
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal total =
+                BigDecimal.ZERO;
 
-        for (DetalleCotizacion detalle : cotizacion.getDetalles()) {
+        for (DetalleCotizacion detalle :
+                cotizacion.getDetalles()) {
 
             if (detalle.getTipoServicio() == null) {
+
                 throw new IllegalArgumentException(
                         "El tipo de servicio es obligatorio"
                 );
             }
 
             if (detalle.getServicioId() == null) {
+
                 throw new IllegalArgumentException(
                         "La referencia del servicio es obligatoria"
                 );
@@ -164,12 +324,17 @@ public Cotizacion findByIdAndClienteCorreo(Long id, String correo) {
             BigDecimal precioUnitario =
                     obtenerPrecioServicio(detalle);
 
-            BigDecimal subtotal = precioUnitario.multiply(
-                    BigDecimal.valueOf(detalle.getCantidad())
-            );
+            BigDecimal subtotal =
+                    precioUnitario.multiply(
+                            BigDecimal.valueOf(
+                                    detalle.getCantidad()
+                            )
+                    );
 
             detalle.setCotizacion(cotizacion);
-            detalle.setPrecioUnitario(precioUnitario);
+            detalle.setPrecioUnitario(
+                    precioUnitario
+            );
             detalle.setSubtotal(subtotal);
 
             total = total.add(subtotal);
@@ -178,62 +343,78 @@ public Cotizacion findByIdAndClienteCorreo(Long id, String correo) {
         cotizacion.setMonto(total);
     }
 
+    // =========================================================
+    // OBTENER PRECIO REAL DEL SERVICIO
+    // =========================================================
+
     private BigDecimal obtenerPrecioServicio(
             DetalleCotizacion detalle) {
 
-        return switch (detalle.getTipoServicio()) {
+        return switch (
+                detalle.getTipoServicio()) {
 
             case CURSO -> {
+
                 Curso curso =
-                        cursoService.findById(detalle.getServicioId());
+                        cursoService.findById(
+                                detalle.getServicioId()
+                        );
 
                 detalle.setDescripcion(
-                        "Curso: " + curso.getNombre()
+                        "Curso: " +
+                                curso.getNombre()
                 );
 
                 yield curso.getCosto();
             }
 
             case DIPLOMADO -> {
+
                 Diplomado diplomado =
                         diplomadoService.findById(
                                 detalle.getServicioId()
                         );
 
                 detalle.setDescripcion(
-                        "Diplomado: " + diplomado.getNombre()
+                        "Diplomado: " +
+                                diplomado.getNombre()
                 );
 
                 yield diplomado.getCosto();
             }
 
             case ESPACIO -> {
+
                 Espacio espacio =
                         espacioService.findById(
                                 detalle.getServicioId()
                         );
 
                 detalle.setDescripcion(
-                        "Espacio: " + espacio.getNombre()
+                        "Espacio: " +
+                                espacio.getNombre()
                 );
 
                 yield espacio.getPrecio();
             }
 
             case CATERING -> {
+
                 Catering catering =
                         cateringService.findById(
                                 detalle.getServicioId()
                         );
 
                 if (catering.getCosto() == null) {
+
                     throw new IllegalArgumentException(
                             "El servicio de catering no tiene un costo definido"
                     );
                 }
 
                 detalle.setDescripcion(
-                        "Catering: " + catering.getTipoServicio()
+                        "Catering: " +
+                                catering.getTipoServicio()
                 );
 
                 yield catering.getCosto();
