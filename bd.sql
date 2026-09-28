@@ -174,7 +174,33 @@ CREATE TABLE agenda (
         REFERENCES espacio(id)
 );
 
--- 11. PAGOS
+-- 11. ALQUILERES
+CREATE TABLE alquiler (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id BIGINT NOT NULL,
+    espacio_id BIGINT NOT NULL,
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    estado VARCHAR(30) NOT NULL,
+    agenda_id BIGINT UNIQUE,
+
+    CONSTRAINT fk_alquiler_cliente
+        FOREIGN KEY (cliente_id)
+        REFERENCES cliente(id),
+
+    CONSTRAINT fk_alquiler_espacio
+        FOREIGN KEY (espacio_id)
+        REFERENCES espacio(id),
+
+    CONSTRAINT fk_alquiler_agenda
+        FOREIGN KEY (agenda_id)
+        REFERENCES agenda(id)
+);
+
+
+-- 12. PAGOS
 CREATE TABLE pago (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     cliente_id BIGINT NOT NULL,
