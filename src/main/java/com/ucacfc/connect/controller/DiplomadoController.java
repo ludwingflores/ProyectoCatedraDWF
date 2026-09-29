@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,9 +55,15 @@ public class DiplomadoController {
                 )
         )
     })
+
     @GetMapping
-    public List<Diplomado> findAll() {
-        return service.findAll();
+    public List<Diplomado> findAll(Authentication authentication) {
+
+            if (esAdmin(authentication)) {
+                    return service.findAll();
+            }
+
+            return service.findAllActivos();
     }
 
     // =========================================================
@@ -86,22 +93,33 @@ public class DiplomadoController {
                 content = @Content(mediaType = "application/json")
         )
     })
-    @GetMapping("/buscar")
-    public Page<Diplomado> search(
-            @RequestParam(defaultValue = "") String nombre,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
 
-        return service.searchByNombre(
-                nombre,
-                page,
-                size,
-                sortBy,
-                direction
-        );
-    }
+    @GetMapping("/buscar")
+public Page<Diplomado> search(
+        @RequestParam(defaultValue = "") String nombre,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "nombre") String sortBy,
+        @RequestParam(defaultValue = "asc") String direction,
+                Authentication authentication) {
+
+        if (esAdmin(authentication)) {
+                return service.searchByNombre(
+                                nombre,
+                                page,
+                                size,
+                                sortBy,
+                                direction);
+        }
+
+        return service.searchActivosByNombre(
+                        nombre,
+                        page,
+                        size,
+                        sortBy,
+                        direction);
+}
+
 
     // =========================================================
     // OBTENER DIPLOMADO POR ID
@@ -126,10 +144,20 @@ public class DiplomadoController {
                 content = @Content(mediaType = "application/json")
         )
     })
+
     @GetMapping("/{id}")
-    public ResponseEntity<Diplomado> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
-    }
+public ResponseEntity<Diplomado> findById(
+        @PathVariable Long id,
+                Authentication authentication) {
+
+        if (esAdmin(authentication)) {
+                return ResponseEntity.ok(
+                                service.findById(id));
+        }
+
+        return ResponseEntity.ok(
+                        service.findActivoById(id));
+}
 
     // =========================================================
     // CREAR DIPLOMADO
@@ -222,9 +250,21 @@ public class DiplomadoController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
+                    @PathVariable Long id) {
 
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+            service.delete(id);
+            return ResponseEntity.noContent().build();
     }
+
+    private boolean esAdmin(Authentication authentication) {
+
+            if (authentication == null) {
+                    return false;
+            }
+
+            return authentication.getAuthorities()
+                            .stream()
+                            .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+    }
+
 }

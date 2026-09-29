@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,10 +55,17 @@ public class CursoController {
                 )
         )
     })
+
     @GetMapping
-    public List<Curso> findAll() {
-        return service.findAll();
+    public List<Curso> findAll(Authentication authentication) {
+
+            if (esAdmin(authentication)) {
+                    return service.findAll();
+            }
+
+            return service.findAllActivos();
     }
+
 
     // =========================================================
     // BUSCAR CURSOS CON FILTRO, PAGINACIÓN Y ORDENAMIENTO
@@ -87,14 +95,17 @@ public class CursoController {
                 content = @Content(mediaType = "application/json")
         )
     })
-    @GetMapping("/buscar")
-    public Page<Curso> search(
-            @RequestParam(defaultValue = "") String nombre,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
 
+    @GetMapping("/buscar")
+public Page<Curso> search(
+        @RequestParam(defaultValue = "") String nombre,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "nombre") String sortBy,
+        @RequestParam(defaultValue = "asc") String direction,
+        Authentication authentication) {
+
+    if (esAdmin(authentication)) {
         return service.searchByNombre(
                 nombre,
                 page,
@@ -103,6 +114,15 @@ public class CursoController {
                 direction
         );
     }
+
+    return service.searchActivosByNombre(
+            nombre,
+            page,
+            size,
+            sortBy,
+            direction
+    );
+}
 
     // =========================================================
     // OBTENER CURSO POR ID
@@ -127,10 +147,21 @@ public class CursoController {
                 content = @Content(mediaType = "application/json")
         )
     })
+
     @GetMapping("/{id}")
-    public ResponseEntity<Curso> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
-    }
+      public ResponseEntity<Curso> findById(
+        @PathVariable Long id,
+                Authentication authentication) {
+
+        if (esAdmin(authentication)) {
+                return ResponseEntity.ok(
+                                service.findById(id));
+        }
+
+        return ResponseEntity.ok(
+                        service.findActivoById(id));
+}
+
 
     // =========================================================
     // CREAR CURSO
@@ -223,12 +254,24 @@ public class CursoController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
+                    @PathVariable Long id) {
 
-        service.delete(id);
+            service.delete(id);
 
-        return ResponseEntity
-                .noContent()
-                .build();
+            return ResponseEntity
+                            .noContent()
+                            .build();
     }
+    private boolean esAdmin(Authentication authentication) {
+
+    if (authentication == null) {
+        return false;
+    }
+
+    return authentication.getAuthorities()
+            .stream()
+            .anyMatch(authority ->
+                    authority.getAuthority().equals("ROLE_ADMIN")
+            );
+}
 }

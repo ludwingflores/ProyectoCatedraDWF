@@ -1,21 +1,25 @@
 package com.ucacfc.connect.service;
 
 import com.ucacfc.connect.exception.ResourceNotFoundException;
+import com.ucacfc.connect.model.Agenda;
 import com.ucacfc.connect.model.Catering;
 import com.ucacfc.connect.model.Cliente;
 import com.ucacfc.connect.model.ServicioCatering;
+import com.ucacfc.connect.model.TipoEvento;
+import com.ucacfc.connect.repository.AgendaRepository;
 import com.ucacfc.connect.repository.CateringRepository;
 import com.ucacfc.connect.repository.ClienteRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -24,15 +28,21 @@ public class CateringService {
     private final CateringRepository repository;
     private final ClienteRepository clienteRepository;
     private final ServicioCateringService servicioCateringService;
+    private final AgendaRepository agendaRepository;
+    private final AgendaService agendaService;
 
     public CateringService(
             CateringRepository repository,
             ClienteRepository clienteRepository,
-            ServicioCateringService servicioCateringService) {
+            ServicioCateringService servicioCateringService,
+            AgendaRepository agendaRepository,
+            AgendaService agendaService) {
 
         this.repository = repository;
         this.clienteRepository = clienteRepository;
         this.servicioCateringService = servicioCateringService;
+        this.agendaRepository = agendaRepository;
+        this.agendaService = agendaService;
     }
 
     // =========================================================
@@ -46,6 +56,7 @@ public class CateringService {
 
     @Transactional(readOnly = true)
     public Catering findById(Long id) {
+
         return repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -59,8 +70,12 @@ public class CateringService {
     // =========================================================
 
     @Transactional(readOnly = true)
-    public List<Catering> findAllByClienteCorreo(String correo) {
-        return repository.findByClienteCorreoIgnoreCase(correo);
+    public List<Catering> findAllByClienteCorreo(
+            String correo) {
+
+        return repository.findByClienteCorreoIgnoreCase(
+                correo
+        );
     }
 
     @Transactional(readOnly = true)
@@ -69,13 +84,17 @@ public class CateringService {
             String correo) {
 
         return repository
-                .findByIdAndClienteCorreoIgnoreCase(id, correo)
+                .findByIdAndClienteCorreoIgnoreCase(
+                        id,
+                        correo
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Catering no encontrado con id: " + id
                         )
                 );
     }
+
     // =========================================================
     // FILTROS + PAGINACIÓN + ORDENAMIENTO
     // =========================================================
@@ -86,7 +105,7 @@ public class CateringService {
             Long servicioCateringId,
             String tipoServicio,
             String estado,
-            java.time.LocalDate fecha,
+            LocalDate fecha,
             int page,
             int size,
             String sortBy,
@@ -97,9 +116,14 @@ public class CateringService {
                 : Sort.by(sortBy).ascending();
 
         PageRequest pageable =
-                PageRequest.of(page, size, sort);
+                PageRequest.of(
+                        page,
+                        size,
+                        sort
+                );
 
         if (clienteId != null) {
+
             return repository.findByClienteId(
                     clienteId,
                     pageable
@@ -107,6 +131,7 @@ public class CateringService {
         }
 
         if (servicioCateringId != null) {
+
             return repository.findByServicioCateringId(
                     servicioCateringId,
                     pageable
@@ -133,6 +158,7 @@ public class CateringService {
         }
 
         if (fecha != null) {
+
             return repository.findByFecha(
                     fecha,
                     pageable
@@ -142,13 +168,17 @@ public class CateringService {
         return repository.findAll(pageable);
     }
 
+    // =========================================================
+    // FILTROS DEL CLIENTE AUTENTICADO
+    // =========================================================
+
     @Transactional(readOnly = true)
     public Page<Catering> searchByClienteCorreo(
             String correo,
             Long servicioCateringId,
             String tipoServicio,
             String estado,
-            java.time.LocalDate fecha,
+            LocalDate fecha,
             int page,
             int size,
             String sortBy,
@@ -159,9 +189,14 @@ public class CateringService {
                 : Sort.by(sortBy).ascending();
 
         PageRequest pageable =
-                PageRequest.of(page, size, sort);
+                PageRequest.of(
+                        page,
+                        size,
+                        sort
+                );
 
         if (servicioCateringId != null) {
+
             return repository
                     .findByClienteCorreoIgnoreCaseAndServicioCateringId(
                             correo,
@@ -193,6 +228,7 @@ public class CateringService {
         }
 
         if (fecha != null) {
+
             return repository
                     .findByClienteCorreoIgnoreCaseAndFecha(
                             correo,
@@ -206,6 +242,7 @@ public class CateringService {
                 pageable
         );
     }
+
     // =========================================================
     // CREAR
     // =========================================================
@@ -214,8 +251,11 @@ public class CateringService {
             Catering entity,
             Authentication authentication) {
 
-        boolean esCliente = authentication != null
-                && authentication.getAuthorities()
+        validarHorario(entity);
+
+        boolean esCliente =
+                authentication != null
+                        && authentication.getAuthorities()
                         .stream()
                         .anyMatch(authority ->
                                 authority.getAuthority()
@@ -224,27 +264,27 @@ public class CateringService {
 
         if (esCliente) {
 
-            String correo = authentication.getName();
+            String correo =
+                    authentication.getName();
 
-            Cliente cliente = clienteRepository
-                    .findByCorreoIgnoreCase(correo)
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "No existe un cliente asociado al correo: "
-                                            + correo
-                            )
-                    );
+            Cliente cliente =
+                    clienteRepository
+                            .findByCorreoIgnoreCase(correo)
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            "No existe un cliente asociado al correo: "
+                                                    + correo
+                                    )
+                            );
 
-            // El cliente de la solicitud se obtiene del JWT.
+            // El cliente se obtiene del JWT.
             entity.setCliente(cliente);
 
-            // Toda solicitud creada por CLIENTE inicia pendiente.
+            // Toda solicitud de cliente inicia pendiente.
             entity.setEstado("PENDIENTE");
 
         } else {
 
-            // ADMIN y RECEPCIONISTA deben indicar
-            // para qué cliente registran la solicitud.
             validarCliente(entity);
 
             if (entity.getEstado() == null
@@ -254,13 +294,27 @@ public class CateringService {
             }
         }
 
-        // El servicio, tipo y precio se obtienen del catálogo.
+        // Servicio y precio vienen del catálogo.
         aplicarServicioCatering(entity);
 
-        // El costo siempre se calcula en el servidor.
+        // El costo se calcula en servidor.
         calcularCosto(entity);
 
-        return repository.save(entity);
+        // Guardamos primero el Catering.
+        Catering saved =
+                repository.save(entity);
+
+        // Creamos su entrada en Agenda.
+        Agenda agenda =
+                crearAgendaDesdeCatering(saved);
+
+        agenda = agendaService
+                .save(agenda);
+
+        // Vinculamos ambos registros.
+        saved.setAgenda(agenda);
+
+        return repository.save(saved);
     }
 
     // =========================================================
@@ -271,18 +325,47 @@ public class CateringService {
             Long id,
             Catering entity) {
 
-        Catering current = findById(id);
+        validarHorario(entity);
+
+        Catering current =
+                findById(id);
 
         validarCliente(entity);
 
-        // Antes de copiar, validamos el servicio seleccionado
-        // y obtenemos sus datos reales desde el catálogo.
         aplicarServicioCatering(entity);
 
-        copyFields(current, entity);
+        copyFields(
+                current,
+                entity
+        );
 
-        // Nunca confiamos en un costo recibido en el JSON.
         calcularCosto(current);
+
+        // Actualizar Agenda existente.
+        if (current.getAgenda() != null) {
+
+            Agenda agenda =
+                    current.getAgenda();
+
+            actualizarAgendaDesdeCatering(
+                    agenda,
+                    current
+            );
+
+            agendaRepository.save(agenda);
+
+        } else {
+
+            // Compatibilidad con registros antiguos
+            // que todavía no tenían Agenda.
+            Agenda agenda =
+                    crearAgendaDesdeCatering(current);
+
+            agenda =
+                    agendaService.save(agenda);
+
+            current.setAgenda(agenda);
+        }
 
         return repository.save(current);
     }
@@ -293,16 +376,150 @@ public class CateringService {
 
     public void delete(Long id) {
 
-        Catering current = findById(id);
+        Catering current =
+                findById(id);
+
+        Agenda agenda =
+                current.getAgenda();
+
+        if (agenda != null) {
+
+            current.setAgenda(null);
+
+            repository.save(current);
+
+            agendaRepository.delete(agenda);
+        }
 
         repository.delete(current);
+    }
+
+    // =========================================================
+    // CREAR AGENDA DESDE CATERING
+    // =========================================================
+
+    private Agenda crearAgendaDesdeCatering(
+            Catering catering) {
+
+        Agenda agenda =
+                new Agenda();
+
+        agenda.setTitulo(
+                "Catering - "
+                        + catering.getTipoServicio()
+        );
+
+        agenda.setDescripcion(
+                "Servicio de catering para "
+                        + catering.getNumeroAsistentes()
+                        + " asistentes. Lugar: "
+                        + catering.getLugar()
+        );
+
+        agenda.setFecha(
+                catering.getFecha()
+        );
+
+        agenda.setHoraInicio(
+                catering.getHora()
+        );
+
+        agenda.setHoraFin(
+                catering.getHoraFin()
+        );
+
+        agenda.setTipo(
+                TipoEvento.CATERING
+        );
+
+        // Catering no utiliza espacio_id.
+        agenda.setEspacio(null);
+
+        return agenda;
+    }
+
+    // =========================================================
+    // ACTUALIZAR AGENDA DESDE CATERING
+    // =========================================================
+
+    private void actualizarAgendaDesdeCatering(
+            Agenda agenda,
+            Catering catering) {
+
+        agenda.setTitulo(
+                "Catering - "
+                        + catering.getTipoServicio()
+        );
+
+        agenda.setDescripcion(
+                "Servicio de catering para "
+                        + catering.getNumeroAsistentes()
+                        + " asistentes. Lugar: "
+                        + catering.getLugar()
+        );
+
+        agenda.setFecha(
+                catering.getFecha()
+        );
+
+        agenda.setHoraInicio(
+                catering.getHora()
+        );
+
+        agenda.setHoraFin(
+                catering.getHoraFin()
+        );
+
+        agenda.setTipo(
+                TipoEvento.CATERING
+        );
+
+        agenda.setEspacio(null);
+    }
+
+    // =========================================================
+    // VALIDAR HORARIO
+    // =========================================================
+
+    private void validarHorario(
+            Catering catering) {
+
+        if (catering.getFecha() == null) {
+
+            throw new IllegalArgumentException(
+                    "La fecha del servicio es obligatoria"
+            );
+        }
+
+        if (catering.getHora() == null) {
+
+            throw new IllegalArgumentException(
+                    "La hora de inicio del servicio es obligatoria"
+            );
+        }
+
+        if (catering.getHoraFin() == null) {
+
+            throw new IllegalArgumentException(
+                    "La hora de finalización del servicio es obligatoria"
+            );
+        }
+
+        if (!catering.getHora()
+                .isBefore(catering.getHoraFin())) {
+
+            throw new IllegalArgumentException(
+                    "La hora de inicio debe ser anterior a la hora de finalización"
+            );
+        }
     }
 
     // =========================================================
     // VALIDAR CLIENTE
     // =========================================================
 
-    private void validarCliente(Catering catering) {
+    private void validarCliente(
+            Catering catering) {
 
         if (catering.getCliente() == null
                 || catering.getCliente().getId() == null) {
@@ -312,14 +529,21 @@ public class CateringService {
             );
         }
 
-        Cliente cliente = clienteRepository
-                .findById(catering.getCliente().getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Cliente no encontrado con id: "
-                                        + catering.getCliente().getId()
+        Cliente cliente =
+                clienteRepository
+                        .findById(
+                                catering
+                                        .getCliente()
+                                        .getId()
                         )
-                );
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Cliente no encontrado con id: "
+                                                + catering
+                                                .getCliente()
+                                                .getId()
+                                )
+                        );
 
         catering.setCliente(cliente);
     }
@@ -328,10 +552,13 @@ public class CateringService {
     // APLICAR SERVICIO DE CATERING
     // =========================================================
 
-    private void aplicarServicioCatering(Catering catering) {
+    private void aplicarServicioCatering(
+            Catering catering) {
 
         if (catering.getServicioCatering() == null
-                || catering.getServicioCatering().getId() == null) {
+                || catering
+                        .getServicioCatering()
+                        .getId() == null) {
 
             throw new IllegalArgumentException(
                     "El servicio de catering es obligatorio"
@@ -339,16 +566,21 @@ public class CateringService {
         }
 
         ServicioCatering servicio =
-                servicioCateringService.findActivoById(
-                        catering.getServicioCatering().getId()
-                );
+                servicioCateringService
+                        .findActivoById(
+                                catering
+                                        .getServicioCatering()
+                                        .getId()
+                        );
 
-        // Guardamos la relación con el catálogo.
-        catering.setServicioCatering(servicio);
+        catering.setServicioCatering(
+                servicio
+        );
 
-        // Estos campos funcionan como snapshot histórico.
-        // Nunca se confía en valores enviados por el usuario.
-        catering.setTipoServicio(servicio.getTipo());
+        catering.setTipoServicio(
+                servicio.getTipo()
+        );
+
         catering.setPrecioPorPersona(
                 servicio.getPrecioPorPersona()
         );
@@ -358,7 +590,8 @@ public class CateringService {
     // CALCULAR COSTO
     // =========================================================
 
-    private void calcularCosto(Catering catering) {
+    private void calcularCosto(
+            Catering catering) {
 
         Integer numeroAsistentes =
                 catering.getNumeroAsistentes();
@@ -375,7 +608,9 @@ public class CateringService {
         }
 
         if (precioPorPersona == null
-                || precioPorPersona.compareTo(BigDecimal.ZERO) <= 0) {
+                || precioPorPersona.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0) {
 
             throw new IllegalArgumentException(
                     "El precio por persona debe ser mayor que 0"
@@ -384,10 +619,14 @@ public class CateringService {
 
         BigDecimal costoTotal =
                 precioPorPersona.multiply(
-                        BigDecimal.valueOf(numeroAsistentes)
+                        BigDecimal.valueOf(
+                                numeroAsistentes
+                        )
                 );
 
-        catering.setCosto(costoTotal);
+        catering.setCosto(
+                costoTotal
+        );
     }
 
     // =========================================================
@@ -398,16 +637,18 @@ public class CateringService {
             Catering current,
             Catering incoming) {
 
-        current.setCliente(incoming.getCliente());
+        current.setCliente(
+                incoming.getCliente()
+        );
+
         current.setServicioCatering(
                 incoming.getServicioCatering()
         );
 
-        // tipoServicio y precioPorPersona ya fueron
-        // obtenidos del catálogo por aplicarServicioCatering().
         current.setTipoServicio(
                 incoming.getTipoServicio()
         );
+
         current.setPrecioPorPersona(
                 incoming.getPrecioPorPersona()
         );
@@ -415,13 +656,32 @@ public class CateringService {
         current.setNumeroAsistentes(
                 incoming.getNumeroAsistentes()
         );
-        current.setMenu(incoming.getMenu());
-        current.setFecha(incoming.getFecha());
-        current.setHora(incoming.getHora());
-        current.setLugar(incoming.getLugar());
-        current.setEstado(incoming.getEstado());
 
-        // No copiamos incoming.getCosto().
-        // Siempre se recalcula en el servidor.
+        current.setMenu(
+                incoming.getMenu()
+        );
+
+        current.setFecha(
+                incoming.getFecha()
+        );
+
+        current.setHora(
+                incoming.getHora()
+        );
+
+        current.setHoraFin(
+                incoming.getHoraFin()
+        );
+
+        current.setLugar(
+                incoming.getLugar()
+        );
+
+        current.setEstado(
+                incoming.getEstado()
+        );
+
+        // El costo NO se copia.
+        // Se recalcula en el servidor.
     }
 }

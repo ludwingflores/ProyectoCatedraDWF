@@ -1,5 +1,6 @@
 package com.ucacfc.connect.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
@@ -8,7 +9,6 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,9 +22,10 @@ public class Catering {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // La relación sigue siendo obligatoria en la entidad y en la BD.
-    // No usamos @NotNull aquí porque, cuando quien crea la solicitud
-    // es un CLIENTE, CateringService obtiene el cliente desde el JWT.
+    // =========================================================
+    // CLIENTE
+    // =========================================================
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
     @JsonIgnoreProperties({
@@ -32,49 +33,113 @@ public class Catering {
             "handler"
     })
     private Cliente cliente;
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+
+    // =========================================================
+    // SERVICIO DE CATERING
+    // =========================================================
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_catering_id")
     @JsonIgnoreProperties({
             "hibernateLazyInitializer",
             "handler"
     })
     private ServicioCatering servicioCatering;
-    @Column(name = "tipo_servicio", nullable = false, length = 100)
+
+    // =========================================================
+    // DATOS DEL SERVICIO
+    // =========================================================
+
+    @Column(
+            name = "tipo_servicio",
+            nullable = false,
+            length = 100
+    )
     private String tipoServicio;
 
     @NotNull(message = "El número de asistentes es obligatorio")
-    @Min(value = 1, message = "Debe haber al menos 1 asistente")
-    @Column(name = "numero_asistentes", nullable = false)
+    @Min(
+            value = 1,
+            message = "Debe haber al menos 1 asistente"
+    )
+    @Column(
+            name = "numero_asistentes",
+            nullable = false
+    )
     private Integer numeroAsistentes;
 
-    @Column(name = "precio_por_persona", nullable = false, precision = 10, scale = 2)
+    @Column(
+            name = "precio_por_persona",
+            nullable = false,
+            precision = 10,
+            scale = 2
+    )
     private BigDecimal precioPorPersona;
 
     @NotBlank(message = "El menú es obligatorio")
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(
+            columnDefinition = "TEXT",
+            nullable = false
+    )
     private String menu;
+
+    // =========================================================
+    // FECHA Y HORARIO
+    // =========================================================
 
     @NotNull(message = "La fecha del servicio es obligatoria")
     @Column(nullable = false)
     private LocalDate fecha;
 
-    @NotNull(message = "La hora del servicio es obligatoria")
+    @NotNull(message = "La hora de inicio del servicio es obligatoria")
     @Column(nullable = false)
     private LocalTime hora;
+
+    @NotNull(message = "La hora de finalización del servicio es obligatoria")
+    @Column(name = "hora_fin", nullable = false)
+    private LocalTime horaFin;
+
+    // =========================================================
+    // LUGAR
+    // =========================================================
 
     @NotBlank(message = "El lugar del servicio es obligatorio")
     @Column(nullable = false)
     private String lugar;
 
-    // El costo total es calculado por CateringService:
-    // precioPorPersona * numeroAsistentes.
-    // Nunca se confía en un costo enviado por el cliente.
-    @DecimalMin(value = "0.00", message = "El costo no puede ser negativo")
-    @Digits(integer = 8, fraction = 2, message = "El costo debe tener como máximo 8 dígitos enteros y 2 decimales")
-    @Column(precision = 10, scale = 2)
+    // =========================================================
+    // COSTO
+    // =========================================================
+
+    @DecimalMin(
+            value = "0.00",
+            message = "El costo no puede ser negativo"
+    )
+    @Digits(
+            integer = 8,
+            fraction = 2,
+            message = "El costo debe tener como máximo 8 dígitos enteros y 2 decimales"
+    )
+    @Column(
+            precision = 10,
+            scale = 2
+    )
     private BigDecimal costo;
 
+    // =========================================================
+    // ESTADO
+    // =========================================================
+
     private String estado;
+
+    // =========================================================
+    // AGENDA
+    // =========================================================
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agenda_id", unique = true)
+    @JsonIgnore
+    private Agenda agenda;
 
     public Catering() {
     }
@@ -87,12 +152,12 @@ public class Catering {
         return id;
     }
 
-    public ServicioCatering getServicioCatering() {
-        return servicioCatering;
-    }
-
     public Cliente getCliente() {
         return cliente;
+    }
+
+    public ServicioCatering getServicioCatering() {
+        return servicioCatering;
     }
 
     public String getTipoServicio() {
@@ -119,6 +184,10 @@ public class Catering {
         return hora;
     }
 
+    public LocalTime getHoraFin() {
+        return horaFin;
+    }
+
     public String getLugar() {
         return lugar;
     }
@@ -131,12 +200,22 @@ public class Catering {
         return estado;
     }
 
+    public Agenda getAgenda() {
+        return agenda;
+    }
+
     // =========================================================
     // SETTERS
     // =========================================================
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public void setServicioCatering(
+            ServicioCatering servicioCatering) {
+
+        this.servicioCatering = servicioCatering;
     }
 
     public void setTipoServicio(String tipoServicio) {
@@ -147,12 +226,10 @@ public class Catering {
         this.numeroAsistentes = numeroAsistentes;
     }
 
-    public void setPrecioPorPersona(BigDecimal precioPorPersona) {
-        this.precioPorPersona = precioPorPersona;
-    }
+    public void setPrecioPorPersona(
+            BigDecimal precioPorPersona) {
 
-    public void setServicioCatering(ServicioCatering servicioCatering) {
-        this.servicioCatering = servicioCatering;
+        this.precioPorPersona = precioPorPersona;
     }
 
     public void setMenu(String menu) {
@@ -167,6 +244,10 @@ public class Catering {
         this.hora = hora;
     }
 
+    public void setHoraFin(LocalTime horaFin) {
+        this.horaFin = horaFin;
+    }
+
     public void setLugar(String lugar) {
         this.lugar = lugar;
     }
@@ -177,5 +258,9 @@ public class Catering {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public void setAgenda(Agenda agenda) {
+        this.agenda = agenda;
     }
 }

@@ -110,24 +110,10 @@ public class AgendaService {
 
         validarDatosAgenda(entity);
 
-        Espacio espacio = espacioService.findById(
-                entity.getEspacio().getId()
+        prepararEspacioYValidarConflicto(
+                entity,
+                null
         );
-
-        boolean existeConflicto = repository.existeConflicto(
-                espacio.getId(),
-                entity.getFecha(),
-                entity.getHoraInicio(),
-                entity.getHoraFin()
-        );
-
-        if (existeConflicto) {
-            throw new IllegalArgumentException(
-                    "El espacio ya se encuentra ocupado en la fecha y horario seleccionados"
-            );
-        }
-
-        entity.setEspacio(espacio);
 
         return repository.save(entity);
     }
@@ -142,26 +128,10 @@ public class AgendaService {
 
         validarDatosAgenda(entity);
 
-        Espacio espacio = espacioService.findById(
-                entity.getEspacio().getId()
+        prepararEspacioYValidarConflicto(
+                entity,
+                id
         );
-
-        boolean existeConflicto =
-                repository.existeConflictoExcluyendoAgenda(
-                        espacio.getId(),
-                        entity.getFecha(),
-                        entity.getHoraInicio(),
-                        entity.getHoraFin(),
-                        id
-                );
-
-        if (existeConflicto) {
-            throw new IllegalArgumentException(
-                    "El espacio ya se encuentra ocupado en la fecha y horario seleccionados"
-            );
-        }
-
-        entity.setEspacio(espacio);
 
         copyFields(current, entity);
 
@@ -180,7 +150,7 @@ public class AgendaService {
     }
 
     // =========================================================
-    // VALIDACIONES
+    // VALIDACIONES GENERALES
     // =========================================================
 
     private void validarDatosAgenda(Agenda agenda) {
@@ -211,13 +181,75 @@ public class AgendaService {
             );
         }
 
-        if (agenda.getEspacio() == null
-                || agenda.getEspacio().getId() == null) {
-
+        if (agenda.getTipo() == null) {
             throw new IllegalArgumentException(
-                    "Debe seleccionar un espacio para la agenda"
+                    "El tipo de evento es obligatorio"
             );
         }
+    }
+
+    // =========================================================
+    // ESPACIO + CONFLICTOS
+    // =========================================================
+
+    private void prepararEspacioYValidarConflicto(
+            Agenda agenda,
+            Long agendaIdExcluir) {
+
+        /*
+         * El espacio es opcional.
+         *
+         * Esto permite registrar en la agenda institucional
+         * actividades que no utilizan un espacio físico.
+         *
+         * Cuando sí existe un espacio, se valida que sea un
+         * espacio real del sistema y que no exista solapamiento
+         * de horario.
+         */
+        if (agenda.getEspacio() == null) {
+            return;
+        }
+
+        if (agenda.getEspacio().getId() == null) {
+            throw new IllegalArgumentException(
+                    "El espacio seleccionado debe tener un id"
+            );
+        }
+
+        Espacio espacio = espacioService.findById(
+                agenda.getEspacio().getId()
+        );
+
+        boolean existeConflicto;
+
+        if (agendaIdExcluir == null) {
+
+            existeConflicto = repository.existeConflicto(
+                    espacio.getId(),
+                    agenda.getFecha(),
+                    agenda.getHoraInicio(),
+                    agenda.getHoraFin()
+            );
+
+        } else {
+
+            existeConflicto =
+                    repository.existeConflictoExcluyendoAgenda(
+                            espacio.getId(),
+                            agenda.getFecha(),
+                            agenda.getHoraInicio(),
+                            agenda.getHoraFin(),
+                            agendaIdExcluir
+                    );
+        }
+
+        if (existeConflicto) {
+            throw new IllegalArgumentException(
+                    "El espacio ya se encuentra ocupado en la fecha y horario seleccionados"
+            );
+        }
+
+        agenda.setEspacio(espacio);
     }
 
     // =========================================================

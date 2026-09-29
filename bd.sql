@@ -35,20 +35,53 @@ CREATE TABLE cliente (
     direccion VARCHAR(255)
 );
 
+-- 3.1 CATEGORIAS
+CREATE TABLE categoria (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- 3.2 MODALIDADES
+CREATE TABLE modalidad (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- 3.3 DOCENTES
+CREATE TABLE docente (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 -- 4. CURSOS
 CREATE TABLE curso (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
-    categoria VARCHAR(100),
-    modalidad VARCHAR(50),
-    docente VARCHAR(150),
+    categoria_id BIGINT,
+    modalidad_id BIGINT,
+    docente_id BIGINT,
     cupo_maximo INT NOT NULL,
     fecha_inicio DATE,
     fecha_fin DATE,
     horario VARCHAR(100),
     costo DECIMAL(10,2) NOT NULL,
-    activo BOOLEAN NOT NULL DEFAULT TRUE
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+
+    CONSTRAINT fk_curso_categoria
+        FOREIGN KEY (categoria_id)
+        REFERENCES categoria(id),
+
+    CONSTRAINT fk_curso_modalidad
+        FOREIGN KEY (modalidad_id)
+        REFERENCES modalidad(id),
+
+    CONSTRAINT fk_curso_docente
+        FOREIGN KEY (docente_id)
+        REFERENCES docente(id)
 );
 
 -- 5. DIPLOMADOS
@@ -56,15 +89,27 @@ CREATE TABLE diplomado (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
-    categoria VARCHAR(100),
-    modalidad VARCHAR(50),
-    docente VARCHAR(150),
+    categoria_id BIGINT,
+    modalidad_id BIGINT,
+    docente_id BIGINT,
     cupo_maximo INT NOT NULL,
     fecha_inicio DATE,
     fecha_fin DATE,
     horario VARCHAR(100),
     costo DECIMAL(10,2) NOT NULL,
-    activo BOOLEAN NOT NULL DEFAULT TRUE
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+
+    CONSTRAINT fk_diplomado_categoria
+        FOREIGN KEY (categoria_id)
+        REFERENCES categoria(id),
+
+    CONSTRAINT fk_diplomado_modalidad
+        FOREIGN KEY (modalidad_id)
+        REFERENCES modalidad(id),
+
+    CONSTRAINT fk_diplomado_docente
+        FOREIGN KEY (docente_id)
+        REFERENCES docente(id)
 );
 
 -- 6. INSCRIPCIONES

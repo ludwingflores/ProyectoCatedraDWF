@@ -77,6 +77,52 @@ public class SecurityConfig {
                                                 .hasRole("ADMIN")
 
                                                 // =====================================================
+                                                // CATALOGOS ACADEMICOS
+                                                // =====================================================
+
+                                                // Todos los roles operativos pueden consultar
+                                                // los catalogos academicos.
+                                                // Los Controllers limitan a usuarios no ADMIN
+                                                // para que solamente puedan visualizar registros activos.
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/categorias/**",
+                                                                "/api/modalidades/**",
+                                                                "/api/docentes/**")
+                                                .hasAnyRole(
+                                                                "ADMIN",
+                                                                "RECEPCIONISTA",
+                                                                "CONTABILIDAD",
+                                                                "CLIENTE")
+
+                                                // Solamente ADMIN puede crear registros
+                                                // en los catalogos academicos.
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/categorias/**",
+                                                                "/api/modalidades/**",
+                                                                "/api/docentes/**")
+                                                .hasRole("ADMIN")
+
+                                                // Solamente ADMIN puede modificar registros
+                                                // de los catalogos academicos.
+                                                .requestMatchers(
+                                                                HttpMethod.PUT,
+                                                                "/api/categorias/**",
+                                                                "/api/modalidades/**",
+                                                                "/api/docentes/**")
+                                                .hasRole("ADMIN")
+
+                                                // DELETE realiza baja logica.
+                                                // Solamente ADMIN puede ejecutarla.
+                                                .requestMatchers(
+                                                                HttpMethod.DELETE,
+                                                                "/api/categorias/**",
+                                                                "/api/modalidades/**",
+                                                                "/api/docentes/**")
+                                                .hasRole("ADMIN")
+
+                                                // =====================================================
                                                 // PAGOS
                                                 // =====================================================
 
@@ -146,6 +192,23 @@ public class SecurityConfig {
                                                                 "ADMIN",
                                                                 "RECEPCIONISTA",
                                                                 "CLIENTE")
+
+                                                // =====================================================
+                                                // CREACION DE COTIZACIONES
+                                                // =====================================================
+
+                                                // ADMIN y RECEPCIONISTA pueden crear cotizaciones
+                                                // para cualquier cliente.
+                                                //
+                                                // CLIENTE puede solicitar su propia cotización.
+                                                // CotizacionService obtiene el cliente desde el JWT.
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/cotizaciones/**")
+                                                .hasAnyRole(
+                                                                "ADMIN",
+                                                                "RECEPCIONISTA",
+                                                                "CLIENTE")
                                                 // =====================================================
                                                 // CREACION DE INFORMACION OPERATIVA
                                                 // =====================================================
@@ -159,8 +222,7 @@ public class SecurityConfig {
                                                                 "/api/cursos/**",
                                                                 "/api/diplomados/**",
                                                                 "/api/espacios/**",
-                                                                "/api/inscripciones/**",
-                                                                "/api/cotizaciones/**")
+                                                                "/api/inscripciones/**")
                                                 .hasAnyRole(
                                                                 "ADMIN",
                                                                 "RECEPCIONISTA")

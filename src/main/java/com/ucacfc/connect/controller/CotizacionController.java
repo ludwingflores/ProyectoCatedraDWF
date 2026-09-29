@@ -168,28 +168,38 @@ public class CotizacionController {
     // CREAR COTIZACIÓN
     // =========================================================
 
-    @PostMapping
-    @Operation(
-            summary = "Crear cotización",
-            description = "Crea una cotización con uno o varios servicios"
-    )
-    public ResponseEntity<Cotizacion> create(
-            @Valid
-            @RequestBody
-            Cotizacion cotizacion) {
+   @PostMapping
+   @Operation(
+        summary = "Crear cotización",
+        description = "Crea una cotización con uno o varios servicios"
+)
+public ResponseEntity<Cotizacion> create(
+        @Valid
+        @RequestBody
+        Cotizacion cotizacion,
+                Authentication authentication) {
 
-        Cotizacion created =
-                service.save(cotizacion);
+        Cotizacion created;
+
+        if (esCliente(authentication)) {
+
+                created = service.saveByClienteCorreo(
+                                cotizacion,
+                                authentication.getName());
+
+        } else {
+
+                created = service.save(cotizacion);
+        }
 
         return ResponseEntity
-                .created(
-                        URI.create(
-                                "/api/cotizaciones/"
-                                        + created.getId()
-                        )
-                )
-                .body(created);
-    }
+                        .created(
+                                        URI.create(
+                                                        "/api/cotizaciones/"
+                                                                        + created.getId()))
+                        .body(created);
+}
+
 
     // =========================================================
     // ACTUALIZAR COTIZACIÓN

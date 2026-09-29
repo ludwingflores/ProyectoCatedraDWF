@@ -190,17 +190,33 @@ public class CotizacionService {
 
     public Cotizacion save(Cotizacion entity) {
 
-        validarCliente(entity);
-        prepararDetalles(entity);
+            validarCliente(entity);
+            prepararDetalles(entity);
 
-        if (entity.getEstado() == null) {
-            entity.setEstado(
-                    EstadoCotizacion.PENDIENTE
-            );
-        }
+            if (entity.getEstado() == null) {
+                    entity.setEstado(
+                                    EstadoCotizacion.PENDIENTE);
+            }
 
-        return repository.save(entity);
+            return repository.save(entity);
     }
+
+    public Cotizacion saveByClienteCorreo(
+        Cotizacion entity,
+                    String correo) {
+
+            Cliente cliente = clienteService.findByCorreo(correo);
+
+            entity.setCliente(cliente);
+
+            prepararDetalles(entity);
+
+            entity.setEstado(
+                            EstadoCotizacion.PENDIENTE);
+
+            return repository.save(entity);
+    }
+
 
     // =========================================================
     // ACTUALIZAR COTIZACIÓN
