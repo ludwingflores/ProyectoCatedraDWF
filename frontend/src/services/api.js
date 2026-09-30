@@ -11,8 +11,15 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
 
-    if (token) {
+    const esRutaPublicaAuth =
+      config.url === '/auth/login' ||
+      config.url === '/auth/forgot-password' ||
+      config.url === '/auth/reset-password'
+
+    if (token && !esRutaPublicaAuth) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      delete config.headers.Authorization
     }
 
     return config
@@ -23,9 +30,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const esRutaLogin = error.config?.url === '/auth/login'
+
+    if (error.response?.status === 401 && !esRutaLogin) {
       localStorage.removeItem('token')
       localStorage.removeItem('usuario')
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
 
     return Promise.reject(error)
