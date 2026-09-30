@@ -22,3 +22,4 @@ out/
 
 # Base de datos local / logs
 *.log
+api-docs.json
