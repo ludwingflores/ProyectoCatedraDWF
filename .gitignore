@@ -23,3 +23,21 @@ out/
 # Base de datos local / logs
 *.log
 api-docs.json
+# Archivos temporales y respaldos de Azure
+azure-backup-before-migration.sql
+bd_azure.sql
+clear-azure-data.sql
+uca_cfc_connect_data.sql
+uca_cfc_connect_data_named.sql
+uca_cfc_connect_local.sql
+
+# Logs y diagnósticos
+cfc-azure-logs/
+cfc-logs/
+cfc-azure-logs.zip
+cfc-logs.zip
+startup-diagnostic.txt
+cost-query.json
+
+# Paquete temporal del frontend
+frontend/frontend-dist.zip
