@@ -400,7 +400,8 @@ public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
-                        "http://localhost:5173"));
+                      "http://localhost:5173",
+                      "https://cfc-connect-frontend-william.azurewebsites.net"));
 
         configuration.setAllowedMethods(List.of(
                         "GET",
