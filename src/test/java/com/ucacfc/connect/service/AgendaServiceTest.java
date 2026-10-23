@@ -56,140 +56,85 @@ class AgendaServiceTest {
         agenda.setTipo(TipoEvento.CURSO);
     }
 
-    // =========================================================
-    // CASO DE ÉXITO
-    // =========================================================
-
+    // Caso de exito
     @Test
     void guardarAgendaSinEspacioDebeGuardarCorrectamente() {
 
-        when(repository.save(any(Agenda.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(Agenda.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Agenda resultado = agendaService.save(agenda);
 
         assertNotNull(resultado);
-        assertEquals(
-                "Evento institucional",
-                resultado.getTitulo()
-        );
+        assertEquals("Evento institucional", resultado.getTitulo());
+        assertEquals(LocalTime.of(8, 0), resultado.getHoraInicio());
+        assertEquals(LocalTime.of(10, 0), resultado.getHoraFin());
 
-        assertEquals(
-                LocalTime.of(8, 0),
-                resultado.getHoraInicio()
-        );
+        verify(repository, times(1)).save(agenda);
 
-        assertEquals(
-                LocalTime.of(10, 0),
-                resultado.getHoraFin()
-        );
-
-        verify(repository, times(1))
-                .save(agenda);
-
-        verify(repository, never())
-                .existeConflicto(
-                        anyLong(),
-                        any(LocalDate.class),
-                        any(LocalTime.class),
-                        any(LocalTime.class)
-                );
+        verify(repository, never()).existeConflicto(anyLong(), any(LocalDate.class), any(LocalTime.class), any(LocalTime.class));
     }
 
-    // =========================================================
-    // CASO DE FALLO DE NEGOCIO
-    // =========================================================
-
+    // Caso de fallo de negocio
     @Test
     void guardarAgendaConHorarioInvalidoDebeLanzarExcepcion() {
 
         agenda.setHoraInicio(LocalTime.of(10, 0));
         agenda.setHoraFin(LocalTime.of(8, 0));
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> agendaService.save(agenda)
-                );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> agendaService.save(agenda));
 
-        assertEquals(
-                "La hora de inicio debe ser anterior a la hora de finalización",
-                exception.getMessage()
-        );
+        assertEquals("La hora de inicio debe ser anterior a la hora de finalización", exception.getMessage());
 
-        verify(repository, never())
-                .save(any(Agenda.class));
+        verify(repository, never()).save(any(Agenda.class));
     }
 
-    // =========================================================
-    // DATOS OBLIGATORIOS
-    // =========================================================
-
+    // Test para poner datos obligatorios
     @Test
     void guardarAgendaSinFechaDebeLanzarExcepcion() {
 
         agenda.setFecha(null);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> agendaService.save(agenda));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> agendaService.save(agenda));
 
-        assertEquals(
-                "La fecha de la agenda es obligatoria",
-                exception.getMessage());
+        assertEquals("La fecha de la agenda es obligatoria", exception.getMessage());
 
-        verify(repository, never())
-                .save(any(Agenda.class));
+        verify(repository, never()).save(any(Agenda.class));
     }
+
+
     @Test
-void guardarAgendaConEspacioOcupadoDebeLanzarExcepcion() {
+    void guardarAgendaConEspacioOcupadoDebeLanzarExcepcion() {
 
-    // Simulamos un espacio existente en la base de datos
-    ReflectionTestUtils.setField(espacio, "id", 1L);
+        // Simulamos un espacio existente en la base de datos
+        ReflectionTestUtils.setField(espacio, "id", 1L);
 
-    espacio.setNombre("Aula Magna");
-    espacio.setTipo("Aula");
-    espacio.setCapacidad(50);
-    espacio.setDisponible(true);
+        espacio.setNombre("Aula Magna");
+        espacio.setTipo("Aula");
+        espacio.setCapacidad(50);
+        espacio.setDisponible(true);
 
-    agenda.setEspacio(espacio);
+        agenda.setEspacio(espacio);
 
-    // EspacioService encuentra el espacio real
-    when(espacioService.findById(1L))
-            .thenReturn(espacio);
+        // EspacioService encuentra el espacio real
+        when(espacioService.findById(1L)).thenReturn(espacio);
 
-    // Simulamos que ya existe otro evento
-    // que ocupa ese espacio en ese horario
-    when(repository.existeConflicto(
-            eq(1L),
-            eq(LocalDate.of(2026, 10, 10)),
-            eq(LocalTime.of(8, 0)),
-            eq(LocalTime.of(10, 0))
-    )).thenReturn(true);
+        // Simulamos que ya existe otro evento
+        // que ocupa ese espacio en ese horario
+        when(repository.existeConflicto(
+                eq(1L),
+                eq(LocalDate.of(2026, 10, 10)),
+                eq(LocalTime.of(8, 0)),
+                eq(LocalTime.of(10, 0))
+        )).thenReturn(true);
 
-    IllegalArgumentException exception =
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> agendaService.save(agenda)
-            );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> agendaService.save(agenda));
 
-  assertEquals(
-        "El espacio ya se encuentra ocupado en la fecha y horario seleccionados",
-        exception.getMessage()
-);
+        assertEquals("El espacio ya se encuentra ocupado en la fecha y horario seleccionados", exception.getMessage());
 
-    verify(espacioService, times(1))
-            .findById(1L);
+        verify(espacioService, times(1)).findById(1L);
 
-    verify(repository, times(1))
-            .existeConflicto(
-                    1L,
-                    LocalDate.of(2026, 10, 10),
-                    LocalTime.of(8, 0),
-                    LocalTime.of(10, 0)
-            );
+        verify(repository, times(1)).existeConflicto(1L, LocalDate.of(2026, 10, 10), LocalTime.of(8, 0), LocalTime.of(10, 0));
 
-    verify(repository, never())
-            .save(any(Agenda.class));
+        verify(repository, never()).save(any(Agenda.class));
 }
 }
