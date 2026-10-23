@@ -32,23 +32,13 @@ public class AlquilerService {
         private final AgendaRepository agendaRepository;
         private final AgendaService agendaService;
 
-        public AlquilerService(
-                        AlquilerRepository repository,
-                        ClienteRepository clienteRepository,
-                        EspacioService espacioService,
-                        AgendaRepository agendaRepository,
-                        AgendaService agendaService) {
-
+        public AlquilerService(AlquilerRepository repository, ClienteRepository clienteRepository, EspacioService espacioService, AgendaRepository agendaRepository, AgendaService agendaService) {
                 this.repository = repository;
                 this.clienteRepository = clienteRepository;
                 this.espacioService = espacioService;
                 this.agendaRepository = agendaRepository;
                 this.agendaService = agendaService;
         }
-
-        // =========================================================
-        // CONSULTAS GENERALES
-        // =========================================================
 
         @Transactional(readOnly = true)
         public List<Alquiler> findAll() {
@@ -57,143 +47,89 @@ public class AlquilerService {
 
         @Transactional(readOnly = true)
         public Alquiler findById(Long id) {
-                return repository.findById(id)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Alquiler no encontrado con id: " + id));
+                return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alquiler no encontrado con id: " + id));
         }
 
-        // =========================================================
-        // CONSULTAS DEL CLIENTE AUTENTICADO
-        // =========================================================
-
+        // Consultas del cliente autenticado
         @Transactional(readOnly = true)
         public List<Alquiler> findAllByClienteCorreo(String correo) {
                 return repository.findByClienteCorreoIgnoreCase(correo);
         }
 
         @Transactional(readOnly = true)
-        public Alquiler findByIdAndClienteCorreo(
-                        Long id,
-                        String correo) {
-
-                return repository
-                                .findByIdAndClienteCorreoIgnoreCase(id, correo)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Alquiler no encontrado con id: " + id));
+        public Alquiler findByIdAndClienteCorreo(Long id, String correo) {
+                return repository.findByIdAndClienteCorreoIgnoreCase(id, correo).orElseThrow(() -> new ResourceNotFoundException("Alquiler no encontrado con id: " + id));
         }
-        // =========================================================
-// FILTROS + PAGINACIÓN + ORDENAMIENTO
-// ADMINISTRACIÓN / RECEPCIÓN
-// =========================================================
 
-@Transactional(readOnly = true)
-public Page<Alquiler> search(
-        Long clienteId,
-        Long espacioId,
-        EstadoAlquiler estado,
-        LocalDate fecha,
-        int page,
-        int size,
-        String sortBy,
-        String direction) {
 
-    Sort sort = direction.equalsIgnoreCase("desc")
-            ? Sort.by(sortBy).descending()
-            : Sort.by(sortBy).ascending();
+        // Filtros y paginacion
+        @Transactional(readOnly = true)
+        public Page<Alquiler> search(
+                Long clienteId,
+                Long espacioId,
+                EstadoAlquiler estado,
+                LocalDate fecha,
+                int page,
+                int size,
+                String sortBy,
+                String direction) {
 
-    PageRequest pageable =
-            PageRequest.of(page, size, sort);
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-    if (clienteId != null) {
-        return repository.findByClienteId(
-                clienteId,
-                pageable
-        );
-    }
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
-    if (espacioId != null) {
-        return repository.findByEspacioId(
-                espacioId,
-                pageable
-        );
-    }
+        if (clienteId != null) {
+                return repository.findByClienteId(clienteId, pageable);
+        }
 
-    if (estado != null) {
-        return repository.findByEstado(
-                estado,
-                pageable
-        );
-    }
+        if (espacioId != null) {
+                return repository.findByEspacioId(espacioId, pageable);
+        }
 
-    if (fecha != null) {
-        return repository.findByFecha(
-                fecha,
-                pageable
-        );
-    }
+        if (estado != null) {
+                return repository.findByEstado(estado, pageable);
+        }
 
-    return repository.findAll(pageable);
-}
+        if (fecha != null) {
+                return repository.findByFecha(fecha, pageable);
+        }
 
-// =========================================================
-// FILTROS DEL CLIENTE AUTENTICADO
-// =========================================================
+        return repository.findAll(pageable);
+        }
 
-@Transactional(readOnly = true)
-public Page<Alquiler> searchByClienteCorreo(
-        String correo,
-        Long espacioId,
-        EstadoAlquiler estado,
-        LocalDate fecha,
-        int page,
-        int size,
-        String sortBy,
-        String direction) {
 
-    Sort sort = direction.equalsIgnoreCase("desc")
-            ? Sort.by(sortBy).descending()
-            : Sort.by(sortBy).ascending();
+        // Filtros del cliente autenticado
+        @Transactional(readOnly = true)
+        public Page<Alquiler> searchByClienteCorreo(
+                String correo,
+                Long espacioId,
+                EstadoAlquiler estado,
+                LocalDate fecha,
+                int page,
+                int size,
+                String sortBy,
+                String direction) {
 
-    PageRequest pageable =
-            PageRequest.of(page, size, sort);
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-    if (espacioId != null) {
-        return repository
-                .findByClienteCorreoIgnoreCaseAndEspacioId(
-                        correo,
-                        espacioId,
-                        pageable
-                );
-    }
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
-    if (estado != null) {
-        return repository
-                .findByClienteCorreoIgnoreCaseAndEstado(
-                        correo,
-                        estado,
-                        pageable
-                );
-    }
+        if (espacioId != null) {
+                return repository.findByClienteCorreoIgnoreCaseAndEspacioId(correo, espacioId, pageable);
+        }
 
-    if (fecha != null) {
-        return repository
-                .findByClienteCorreoIgnoreCaseAndFecha(
-                        correo,
-                        fecha,
-                        pageable
-                );
-    }
+        if (estado != null) {
+                return repository.findByClienteCorreoIgnoreCaseAndEstado(correo, estado, pageable);
+        }
 
-    return repository.findByClienteCorreoIgnoreCase(
-            correo,
-            pageable
-    );
-}
+        if (fecha != null) {
+                return repository.findByClienteCorreoIgnoreCaseAndFecha(correo, fecha, pageable);
+        }
 
-        // =========================================================
+        return repository.findByClienteCorreoIgnoreCase(correo, pageable);
+        }
+
         // CONSULTAR DISPONIBILIDAD - RF09
-        // =========================================================
-
         @Transactional(readOnly = true)
         public boolean estaDisponible(
                         Long espacioId,
@@ -224,30 +160,16 @@ public Page<Alquiler> searchByClienteCorreo(
                 return !conflictoAlquiler && !conflictoAgenda;
         }
 
-        // =========================================================
         // CREAR - RF07
-        // =========================================================
+        public Alquiler save(Alquiler entity, Authentication authentication) {
 
-        public Alquiler save(
-                        Alquiler entity,
-                        Authentication authentication) {
-
-                validarHorario(
-                                entity.getFecha(),
-                                entity.getHoraInicio(),
-                                entity.getHoraFin());
+                validarHorario(entity.getFecha(), entity.getHoraInicio(), entity.getHoraFin());
 
                 asignarCliente(entity, authentication);
 
-                Espacio espacio = validarEspacio(
-                                entity.getEspacio());
+                Espacio espacio = validarEspacio(entity.getEspacio());
 
-                validarDisponibilidad(
-                                espacio,
-                                entity.getFecha(),
-                                entity.getHoraInicio(),
-                                entity.getHoraFin(),
-                                null);
+                validarDisponibilidad(espacio, entity.getFecha(), entity.getHoraInicio(), entity.getHoraFin(), null);
 
                 entity.setEspacio(espacio);
 
@@ -268,12 +190,9 @@ public Page<Alquiler> searchByClienteCorreo(
 
                         Agenda agenda = new Agenda();
 
-                        agenda.setTitulo(
-                                        "Alquiler - " + espacio.getNombre());
+                        agenda.setTitulo("Alquiler - " + espacio.getNombre());
 
-                        agenda.setDescripcion(
-                                        "Alquiler registrado para "
-                                                        + entity.getCliente().getNombre());
+                        agenda.setDescripcion("Alquiler registrado para " + entity.getCliente().getNombre());
 
                         agenda.setFecha(entity.getFecha());
                         agenda.setHoraInicio(entity.getHoraInicio());
@@ -289,29 +208,20 @@ public Page<Alquiler> searchByClienteCorreo(
                 return repository.save(entity);
         }
 
-        // =========================================================
         // ACTUALIZAR
-        // =========================================================
 
-        public Alquiler update(
-                        Long id,
-                        Alquiler entity) {
+        public Alquiler update(Long id, Alquiler entity) {
 
                 Alquiler current = findById(id);
 
-                validarHorario(
-                                entity.getFecha(),
-                                entity.getHoraInicio(),
-                                entity.getHoraFin());
+                validarHorario(entity.getFecha(), entity.getHoraInicio(), entity.getHoraFin());
 
                 validarCliente(entity);
 
-                Espacio espacio = validarEspacio(
-                                entity.getEspacio());
+                Espacio espacio = validarEspacio(entity.getEspacio());
 
                 if (!Boolean.TRUE.equals(espacio.getDisponible())) {
-                        throw new IllegalArgumentException(
-                                        "El espacio seleccionado no está disponible");
+                        throw new IllegalArgumentException("El espacio seleccionado no está disponible");
                 }
 
                 // Verificar conflictos con otros alquileres,
@@ -324,15 +234,12 @@ public Page<Alquiler> searchByClienteCorreo(
                                 id);
 
                 if (conflictoAlquiler) {
-                        throw new IllegalArgumentException(
-                                        "El espacio ya posee un alquiler en la fecha y horario seleccionados");
+                        throw new IllegalArgumentException("El espacio ya posee un alquiler en la fecha y horario seleccionados");
                 }
 
                 Agenda agendaActual = current.getAgenda();
 
-                // ---------------------------------------------------------
                 // ALQUILER CANCELADO
-                // ---------------------------------------------------------
                 // Un alquiler cancelado deja de bloquear el espacio.
                 if (entity.getEstado() == EstadoAlquiler.CANCELADO) {
 
@@ -342,10 +249,7 @@ public Page<Alquiler> searchByClienteCorreo(
                         }
 
                 } else {
-
-                        // -----------------------------------------------------
                         // CREAR AGENDA SI EL ALQUILER NO TENÍA UNA
-                        // -----------------------------------------------------
                         if (agendaActual == null) {
 
                                 // Como no existe una agenda propia que excluir,
@@ -357,18 +261,14 @@ public Page<Alquiler> searchByClienteCorreo(
                                                 entity.getHoraFin());
 
                                 if (conflictoAgenda) {
-                                        throw new IllegalArgumentException(
-                                                        "El espacio ya se encuentra ocupado en la agenda institucional");
+                                        throw new IllegalArgumentException("El espacio ya se encuentra ocupado en la agenda institucional");
                                 }
 
                                 Agenda nuevaAgenda = new Agenda();
 
-                                nuevaAgenda.setTitulo(
-                                                "Alquiler - " + espacio.getNombre());
+                                nuevaAgenda.setTitulo("Alquiler - " + espacio.getNombre());
 
-                                nuevaAgenda.setDescripcion(
-                                                "Alquiler registrado para "
-                                                                + entity.getCliente().getNombre());
+                                nuevaAgenda.setDescripcion("Alquiler registrado para " + entity.getCliente().getNombre());
 
                                 nuevaAgenda.setFecha(entity.getFecha());
                                 nuevaAgenda.setHoraInicio(entity.getHoraInicio());
@@ -376,25 +276,19 @@ public Page<Alquiler> searchByClienteCorreo(
                                 nuevaAgenda.setTipo(TipoEvento.ALQUILER);
                                 nuevaAgenda.setEspacio(espacio);
 
-                                current.setAgenda(
-                                                agendaService.save(nuevaAgenda));
+                                current.setAgenda(agendaService.save(nuevaAgenda));
 
                         } else {
 
-                                // -------------------------------------------------
                                 // ACTUALIZAR LA AGENDA EXISTENTE
-                                // -------------------------------------------------
                                 // AgendaService.update excluye su propio registro al
                                 // comprobar conflictos, evitando que choque consigo misma.
 
                                 Agenda agendaActualizada = new Agenda();
 
-                                agendaActualizada.setTitulo(
-                                                "Alquiler - " + espacio.getNombre());
+                                agendaActualizada.setTitulo("Alquiler - " + espacio.getNombre());
 
-                                agendaActualizada.setDescripcion(
-                                                "Alquiler registrado para "
-                                                                + entity.getCliente().getNombre());
+                                agendaActualizada.setDescripcion("Alquiler registrado para " + entity.getCliente().getNombre());
 
                                 agendaActualizada.setFecha(entity.getFecha());
                                 agendaActualizada.setHoraInicio(entity.getHoraInicio());
@@ -402,9 +296,7 @@ public Page<Alquiler> searchByClienteCorreo(
                                 agendaActualizada.setTipo(TipoEvento.ALQUILER);
                                 agendaActualizada.setEspacio(espacio);
 
-                                agendaService.update(
-                                                agendaActual.getId(),
-                                                agendaActualizada);
+                                agendaService.update(agendaActual.getId(), agendaActualizada);
                         }
                 }
 
@@ -418,10 +310,7 @@ public Page<Alquiler> searchByClienteCorreo(
                 return repository.save(current);
         }
 
-        // =========================================================
         // ELIMINAR
-        // =========================================================
-
       public void delete(Long id) {
 
     Alquiler current = findById(id);
@@ -439,24 +328,12 @@ public Page<Alquiler> searchByClienteCorreo(
     repository.delete(current);
 }
 
-        // =========================================================
         // CLIENTE
-        // =========================================================
-
-        private void asignarCliente(
-                        Alquiler alquiler,
-                        Authentication authentication) {
+        private void asignarCliente(Alquiler alquiler, Authentication authentication) {
 
                 if (esCliente(authentication)) {
-
                         String correo = authentication.getName();
-
-                        Cliente cliente = clienteRepository
-                                        .findByCorreoIgnoreCase(correo)
-                                        .orElseThrow(() -> new ResourceNotFoundException(
-                                                        "No existe un cliente asociado al correo: "
-                                                                        + correo));
-
+                        Cliente cliente = clienteRepository.findByCorreoIgnoreCase(correo).orElseThrow(() -> new ResourceNotFoundException("No existe un cliente asociado al correo: " + correo));
                         alquiler.setCliente(cliente);
 
                 } else {
@@ -466,46 +343,26 @@ public Page<Alquiler> searchByClienteCorreo(
 
         private void validarCliente(Alquiler alquiler) {
 
-                if (alquiler.getCliente() == null
-                                || alquiler.getCliente().getId() == null) {
-
-                        throw new IllegalArgumentException(
-                                        "El cliente es obligatorio");
+                if (alquiler.getCliente() == null || alquiler.getCliente().getId() == null) {
+                        throw new IllegalArgumentException("El cliente es obligatorio");
                 }
 
-                Cliente cliente = clienteRepository
-                                .findById(alquiler.getCliente().getId())
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Cliente no encontrado con id: "
-                                                                + alquiler.getCliente().getId()));
-
+                Cliente cliente = clienteRepository.findById(alquiler.getCliente().getId()).orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + alquiler.getCliente().getId()));
                 alquiler.setCliente(cliente);
         }
 
         private boolean esCliente(Authentication authentication) {
-
-                return authentication != null
-                                && authentication.getAuthorities()
-                                                .stream()
-                                                .anyMatch(authority -> authority.getAuthority()
-                                                                .equals("ROLE_CLIENTE"));
+                return authentication != null && authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_CLIENTE"));
         }
 
-        // =========================================================
         // ESPACIO Y DISPONIBILIDAD
-        // =========================================================
-
         private Espacio validarEspacio(Espacio espacioRecibido) {
 
-                if (espacioRecibido == null
-                                || espacioRecibido.getId() == null) {
-
-                        throw new IllegalArgumentException(
-                                        "El espacio es obligatorio");
+                if (espacioRecibido == null || espacioRecibido.getId() == null) {
+                        throw new IllegalArgumentException("El espacio es obligatorio");
                 }
 
-                return espacioService.findById(
-                                espacioRecibido.getId());
+                return espacioService.findById(espacioRecibido.getId());
         }
 
         private void validarDisponibilidad(
@@ -516,8 +373,7 @@ public Page<Alquiler> searchByClienteCorreo(
                         Long alquilerId) {
 
                 if (!Boolean.TRUE.equals(espacio.getDisponible())) {
-                        throw new IllegalArgumentException(
-                                        "El espacio seleccionado no está disponible");
+                        throw new IllegalArgumentException("El espacio seleccionado no está disponible");
                 }
 
                 boolean conflictoAlquiler;
@@ -541,8 +397,7 @@ public Page<Alquiler> searchByClienteCorreo(
                 }
 
                 if (conflictoAlquiler) {
-                        throw new IllegalArgumentException(
-                                        "El espacio ya posee un alquiler en la fecha y horario seleccionados");
+                        throw new IllegalArgumentException("El espacio ya posee un alquiler en la fecha y horario seleccionados");
                 }
 
                 boolean conflictoAgenda = agendaRepository.existeConflicto(
@@ -552,45 +407,31 @@ public Page<Alquiler> searchByClienteCorreo(
                                 horaFin);
 
                 if (conflictoAgenda) {
-                        throw new IllegalArgumentException(
-                                        "El espacio ya se encuentra ocupado en la agenda institucional");
+                        throw new IllegalArgumentException("El espacio ya se encuentra ocupado en la agenda institucional");
                 }
         }
 
-        // =========================================================
         // HORARIO
-        // =========================================================
-
-        private void validarHorario(
-                        LocalDate fecha,
-                        LocalTime horaInicio,
-                        LocalTime horaFin) {
+        private void validarHorario(LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
 
                 if (fecha == null) {
-                        throw new IllegalArgumentException(
-                                        "La fecha del alquiler es obligatoria");
+                        throw new IllegalArgumentException("La fecha del alquiler es obligatoria");
                 }
 
                 if (horaInicio == null) {
-                        throw new IllegalArgumentException(
-                                        "La hora de inicio es obligatoria");
+                        throw new IllegalArgumentException("La hora de inicio es obligatoria");
                 }
 
                 if (horaFin == null) {
-                        throw new IllegalArgumentException(
-                                        "La hora de finalización es obligatoria");
+                        throw new IllegalArgumentException("La hora de finalización es obligatoria");
                 }
 
                 if (!horaInicio.isBefore(horaFin)) {
-                        throw new IllegalArgumentException(
-                                        "La hora de inicio debe ser anterior a la hora de finalización");
+                        throw new IllegalArgumentException("La hora de inicio debe ser anterior a la hora de finalización");
                 }
         }
 
-        // =========================================================
-        // COPIAR CAMPOS
-        // =========================================================
-
+        // Copiar campos
         private void copyFields(
                         Alquiler current,
                         Alquiler incoming) {

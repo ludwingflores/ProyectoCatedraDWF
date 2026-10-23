@@ -22,10 +22,7 @@ public class EspacioService {
         this.repository = repository;
     }
 
-    // =========================================================
     // CONSULTAS GENERALES
-    // =========================================================
-
     @Transactional(readOnly = true)
     public List<Espacio> findAll() {
         return repository.findAll();
@@ -33,18 +30,10 @@ public class EspacioService {
 
     @Transactional(readOnly = true)
     public Espacio findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Espacio no encontrado con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Espacio no encontrado con id: " + id));
     }
 
-    // =========================================================
     // FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
-
     @Transactional(readOnly = true)
     public Page<Espacio> search(
             String nombre,
@@ -56,108 +45,53 @@ public class EspacioService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository.findByNombreContainingIgnoreCase(
-                    nombre,
-                    pageable
-            );
+            return repository.findByNombreContainingIgnoreCase(nombre, pageable);
         }
 
         if (tipo != null && !tipo.isBlank()) {
-            return repository.findByTipoContainingIgnoreCase(
-                    tipo,
-                    pageable
-            );
+            return repository.findByTipoContainingIgnoreCase(tipo, pageable);
         }
 
         if (capacidad != null) {
-            return repository.findByCapacidadGreaterThanEqual(
-                    capacidad,
-                    pageable
-            );
+            return repository.findByCapacidadGreaterThanEqual(capacidad, pageable);
         }
 
         if (disponible != null) {
-            return repository.findByDisponible(
-                    disponible,
-                    pageable
-            );
+            return repository.findByDisponible(disponible, pageable);
         }
-
         return repository.findAll(pageable);
     }
 
-    // =========================================================
     // CREAR
-    // =========================================================
-
     public Espacio save(Espacio entity) {
         return repository.save(entity);
     }
 
-    // =========================================================
     // ACTUALIZAR
-    // =========================================================
-
-    public Espacio update(
-            Long id,
-            Espacio entity) {
-
+    public Espacio update(Long id, Espacio entity) {
         Espacio current = findById(id);
-
         copyFields(current, entity);
-
         return repository.save(current);
     }
 
-    // =========================================================
     // ELIMINAR
-    // =========================================================
-
     public void delete(Long id) {
-
         Espacio current = findById(id);
-
         repository.delete(current);
     }
 
-    // =========================================================
     // COPIAR CAMPOS
-    // =========================================================
-
-    private void copyFields(
-            Espacio current,
-            Espacio incoming) {
-
-        current.setNombre(
-                incoming.getNombre()
-        );
-
-        current.setTipo(
-                incoming.getTipo()
-        );
-
-        current.setCapacidad(
-                incoming.getCapacidad()
-        );
-
-        current.setPrecio(
-                incoming.getPrecio()
-        );
-
-        current.setDisponible(
-                incoming.getDisponible()
-        );
-
-        current.setEquipamiento(
-                incoming.getEquipamiento()
-        );
+    private void copyFields(Espacio current, Espacio incoming) {
+        current.setNombre(incoming.getNombre());
+        current.setTipo(incoming.getTipo());
+        current.setCapacidad(incoming.getCapacidad());
+        current.setPrecio(incoming.getPrecio());
+        current.setDisponible(incoming.getDisponible());
+        current.setEquipamiento(incoming.getEquipamiento());
     }
 }

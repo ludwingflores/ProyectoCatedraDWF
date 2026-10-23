@@ -12,76 +12,31 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CateringRepository extends JpaRepository<Catering, Long> {
 
-    // =========================================================
-    // CONSULTAS EXISTENTES
-    // =========================================================
 
+    // Consultas existentes
     List<Catering> findByClienteCorreoIgnoreCase(String correo);
 
-    Optional<Catering> findByIdAndClienteCorreoIgnoreCase(
-            Long id,
-            String correo
-    );
+    Optional<Catering> findByIdAndClienteCorreoIgnoreCase(Long id, String correo);
 
-    // =========================================================
-    // FILTROS GENERALES + PAGINACIÓN
-    // =========================================================
+    // Filtros generales y paginacion
+    Page<Catering> findByClienteId(Long clienteId, Pageable pageable);
 
-    Page<Catering> findByClienteId(
-            Long clienteId,
-            Pageable pageable
-    );
+    Page<Catering> findByServicioCateringId(Long servicioCateringId, Pageable pageable);
 
-    Page<Catering> findByServicioCateringId(
-            Long servicioCateringId,
-            Pageable pageable
-    );
+    Page<Catering> findByTipoServicioContainingIgnoreCase(String tipoServicio, Pageable pageable);
 
-    Page<Catering> findByTipoServicioContainingIgnoreCase(
-            String tipoServicio,
-            Pageable pageable
-    );
+    Page<Catering> findByEstadoIgnoreCase(String estado, Pageable pageable);
 
-    Page<Catering> findByEstadoIgnoreCase(
-            String estado,
-            Pageable pageable
-    );
+    Page<Catering> findByFecha(LocalDate fecha, Pageable pageable);
 
-    Page<Catering> findByFecha(
-            LocalDate fecha,
-            Pageable pageable
-    );
+    // Filtros del cliente 
+    Page<Catering> findByClienteCorreoIgnoreCase(String correo, Pageable pageable);
 
-    // =========================================================
-    // FILTROS DEL CLIENTE AUTENTICADO
-    // =========================================================
+    Page<Catering> findByClienteCorreoIgnoreCaseAndServicioCateringId(String correo, Long servicioCateringId, Pageable pageable);
 
-    Page<Catering> findByClienteCorreoIgnoreCase(
-            String correo,
-            Pageable pageable
-    );
+    Page<Catering> findByClienteCorreoIgnoreCaseAndTipoServicioContainingIgnoreCase(String correo, String tipoServicio, Pageable pageable);
 
-    Page<Catering> findByClienteCorreoIgnoreCaseAndServicioCateringId(
-            String correo,
-            Long servicioCateringId,
-            Pageable pageable
-    );
+    Page<Catering> findByClienteCorreoIgnoreCaseAndEstadoIgnoreCase(String correo, String estado, Pageable pageable);
 
-    Page<Catering> findByClienteCorreoIgnoreCaseAndTipoServicioContainingIgnoreCase(
-            String correo,
-            String tipoServicio,
-            Pageable pageable
-    );
-
-    Page<Catering> findByClienteCorreoIgnoreCaseAndEstadoIgnoreCase(
-            String correo,
-            String estado,
-            Pageable pageable
-    );
-
-    Page<Catering> findByClienteCorreoIgnoreCaseAndFecha(
-            String correo,
-            LocalDate fecha,
-            Pageable pageable
-    );
+    Page<Catering> findByClienteCorreoIgnoreCaseAndFecha(String correo, LocalDate fecha, Pageable pageable);
 }

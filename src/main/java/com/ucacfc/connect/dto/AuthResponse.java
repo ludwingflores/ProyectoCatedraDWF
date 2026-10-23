@@ -12,13 +12,7 @@ public class AuthResponse {
     public AuthResponse() {
     }
 
-    public AuthResponse(
-            String token,
-            Long usuarioId,
-            String nombre,
-            String correo,
-            String rol) {
-
+    public AuthResponse(String token, Long usuarioId, String nombre, String correo, String rol) {
         this.token = token;
         this.tipo = "Bearer";
         this.usuarioId = usuarioId;

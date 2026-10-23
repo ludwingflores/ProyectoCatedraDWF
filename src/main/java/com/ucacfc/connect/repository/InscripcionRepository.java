@@ -11,53 +11,22 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface InscripcionRepository
-        extends JpaRepository<Inscripcion, Long> {
+public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> {
 
-    // =========================================================
-    // VALIDACIONES DE NEGOCIO
-    // =========================================================
+    // Validaciones de negocio
+    boolean existsByClienteIdAndCursoIdAndEstadoNot(Long clienteId, Long cursoId, EstadoInscripcion estado);
 
-    boolean existsByClienteIdAndCursoIdAndEstadoNot(
-            Long clienteId,
-            Long cursoId,
-            EstadoInscripcion estado
-    );
+    long countByCursoIdAndEstadoIn(Long cursoId, Collection<EstadoInscripcion> estados);
 
-    long countByCursoIdAndEstadoIn(
-            Long cursoId,
-            Collection<EstadoInscripcion> estados
-    );
+    // Historial del cliente
+    List<Inscripcion> findByClienteIdOrderByFechaDesc(Long clienteId);
 
-    // =========================================================
-    // HISTORIAL DEL CLIENTE - RF14
-    // =========================================================
+    // Filtros paginados
+    Page<Inscripcion> findByClienteId(Long clienteId, Pageable pageable);
 
-    List<Inscripcion> findByClienteIdOrderByFechaDesc(
-            Long clienteId
-    );
+    Page<Inscripcion> findByCursoId(Long cursoId, Pageable pageable);
 
-    // =========================================================
-    // FILTROS PAGINADOS
-    // =========================================================
+    Page<Inscripcion> findByEstado(EstadoInscripcion estado, Pageable pageable);
 
-    Page<Inscripcion> findByClienteId(
-            Long clienteId,
-            Pageable pageable
-    );
-
-    Page<Inscripcion> findByCursoId(
-            Long cursoId,
-            Pageable pageable
-    );
-
-    Page<Inscripcion> findByEstado(
-            EstadoInscripcion estado,
-            Pageable pageable
-    );
-
-    Page<Inscripcion> findByFecha(
-            LocalDate fecha,
-            Pageable pageable
-    );
+    Page<Inscripcion> findByFecha(LocalDate fecha, Pageable pageable);
 }

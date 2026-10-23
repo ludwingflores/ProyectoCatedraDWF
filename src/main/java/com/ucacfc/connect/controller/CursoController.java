@@ -35,10 +35,6 @@ public class CursoController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR TODOS LOS CURSOS
-    // =========================================================
-
     @Operation(
             summary = "Listar cursos",
             description = "Obtiene la lista completa de todos los cursos registrados en el sistema."
@@ -60,16 +56,10 @@ public class CursoController {
     public List<Curso> findAll(Authentication authentication) {
 
             if (esAdmin(authentication)) {
-                    return service.findAll();
+                return service.findAll();
             }
-
             return service.findAllActivos();
     }
-
-
-    // =========================================================
-    // BUSCAR CURSOS CON FILTRO, PAGINACIÓN Y ORDENAMIENTO
-    // =========================================================
 
     @Operation(
             summary = "Buscar cursos",
@@ -97,7 +87,7 @@ public class CursoController {
     })
 
     @GetMapping("/buscar")
-public Page<Curso> search(
+        public Page<Curso> search(
         @RequestParam(defaultValue = "") String nombre,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
@@ -106,27 +96,11 @@ public Page<Curso> search(
         Authentication authentication) {
 
     if (esAdmin(authentication)) {
-        return service.searchByNombre(
-                nombre,
-                page,
-                size,
-                sortBy,
-                direction
-        );
+        return service.searchByNombre(nombre,page,size,sortBy,direction);
     }
 
-    return service.searchActivosByNombre(
-            nombre,
-            page,
-            size,
-            sortBy,
-            direction
-    );
+    return service.searchActivosByNombre(nombre,page,size,sortBy,direction);
 }
-
-    // =========================================================
-    // OBTENER CURSO POR ID
-    // =========================================================
 
     @Operation(
             summary = "Obtener curso por ID",
@@ -149,23 +123,13 @@ public Page<Curso> search(
     })
 
     @GetMapping("/{id}")
-      public ResponseEntity<Curso> findById(
-        @PathVariable Long id,
-                Authentication authentication) {
+      public ResponseEntity<Curso> findById(@PathVariable Long id, Authentication authentication) {
 
         if (esAdmin(authentication)) {
-                return ResponseEntity.ok(
-                                service.findById(id));
+                return ResponseEntity.ok(service.findById(id));
         }
-
-        return ResponseEntity.ok(
-                        service.findActivoById(id));
+        return ResponseEntity.ok(service.findActivoById(id));
 }
-
-
-    // =========================================================
-    // CREAR CURSO
-    // =========================================================
 
     @Operation(
             summary = "Crear un nuevo curso",
@@ -195,10 +159,6 @@ public Page<Curso> search(
                 .body(service.save(entity));
     }
 
-    // =========================================================
-    // ACTUALIZAR CURSO
-    // =========================================================
-
     @Operation(
             summary = "Actualizar curso",
             description = "Actualiza los datos de un curso existente identificado por su ID."
@@ -224,18 +184,10 @@ public Page<Curso> search(
         )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Curso> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Curso entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Curso> update(@PathVariable Long id, @Valid @RequestBody Curso entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
-    // =========================================================
-    // ELIMINAR CURSO
-    // =========================================================
 
     @Operation(
             summary = "Eliminar curso",
@@ -253,25 +205,16 @@ public Page<Curso> search(
         )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-                    @PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
 
             service.delete(id);
-
-            return ResponseEntity
-                            .noContent()
-                            .build();
+            return ResponseEntity.noContent().build();
     }
     private boolean esAdmin(Authentication authentication) {
-
     if (authentication == null) {
         return false;
     }
 
-    return authentication.getAuthorities()
-            .stream()
-            .anyMatch(authority ->
-                    authority.getAuthority().equals("ROLE_ADMIN")
-            );
+    return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
 }
 }

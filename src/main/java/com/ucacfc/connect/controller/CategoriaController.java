@@ -58,13 +58,11 @@ public class CategoriaController {
             )
     })
     @GetMapping
-    public List<Categoria> findAll(
-            Authentication authentication) {
+    public List<Categoria> findAll(Authentication authentication) {
 
         if (esAdmin(authentication)) {
             return service.findAll();
         }
-
         return service.findAllActivas();
     }
 
@@ -83,6 +81,7 @@ public class CategoriaController {
                     description = "Consulta realizada exitosamente"
             )
     })
+
     @GetMapping("/buscar")
     public ResponseEntity<Page<Categoria>> search(
             @RequestParam(required = false)
@@ -108,27 +107,11 @@ public class CategoriaController {
         Page<Categoria> resultado;
 
         if (esAdmin(authentication)) {
-
-            resultado = service.search(
-                    nombre,
-                    activo,
-                    page,
-                    size,
-                    sortBy,
-                    direction
-            );
+            resultado = service.search(nombre, activo, page, size, sortBy, direction);
 
         } else {
-
-            resultado = service.searchActivas(
-                    nombre,
-                    page,
-                    size,
-                    sortBy,
-                    direction
-            );
+            resultado = service.searchActivas(nombre, page, size, sortBy, direction);
         }
-
         return ResponseEntity.ok(resultado);
     }
 
@@ -156,19 +139,12 @@ public class CategoriaController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria> findById(
-            @PathVariable Long id,
-            Authentication authentication) {
+    public ResponseEntity<Categoria> findById(@PathVariable Long id, Authentication authentication) {
 
         if (esAdmin(authentication)) {
-            return ResponseEntity.ok(
-                    service.findById(id)
-            );
+            return ResponseEntity.ok(service.findById(id));
         }
-
-        return ResponseEntity.ok(
-                service.findActivaById(id)
-        );
+        return ResponseEntity.ok(service.findActivaById(id));
     }
 
     @Operation(
@@ -186,12 +162,8 @@ public class CategoriaController {
             )
     })
     @PostMapping
-    public ResponseEntity<Categoria> create(
-            @Valid @RequestBody Categoria entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+    public ResponseEntity<Categoria> create(@Valid @RequestBody Categoria entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @Operation(
@@ -209,13 +181,8 @@ public class CategoriaController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Categoria> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Categoria entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Categoria> update(@PathVariable Long id, @Valid @RequestBody Categoria entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
     @Operation(
@@ -236,27 +203,15 @@ public class CategoriaController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
-    private boolean esAdmin(
-            Authentication authentication) {
-
+    private boolean esAdmin(Authentication authentication) {
         if (authentication == null) {
             return false;
         }
-
-        return authentication
-                .getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).anyMatch("ROLE_ADMIN"::equals);
     }
 }

@@ -27,13 +27,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(
-            AuthenticationManager authenticationManager,
-            UsuarioRepository usuarioRepository,
-            UserDetailsService userDetailsService,
-            JwtService jwtService,
-            PasswordEncoder passwordEncoder) {
-
+    public AuthService(AuthenticationManager authenticationManager, UsuarioRepository usuarioRepository, UserDetailsService userDetailsService, JwtService jwtService, PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.usuarioRepository = usuarioRepository;
         this.userDetailsService = userDetailsService;
@@ -43,23 +37,11 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getCorreo(),
-                        request.getPassword()
-                )
-        );
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getCorreo(),request.getPassword()));
 
-        Usuario usuario = usuarioRepository
-                .findByCorreo(request.getCorreo())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Correo o contraseña incorrectos"
-                        )
-                );
+        Usuario usuario = usuarioRepository.findByCorreo(request.getCorreo()).orElseThrow(() -> new IllegalArgumentException("Correo o contraseña incorrectos"));
 
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(usuario.getCorreo());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getCorreo());
 
         String token = jwtService.generateToken(userDetails);
 
@@ -74,23 +56,12 @@ public class AuthService {
 
     public String requestPasswordReset(ForgotPasswordRequest request) {
 
-        Usuario usuario = usuarioRepository
-                .findByCorreo(request.getCorreo())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "No existe un usuario con ese correo"
-                        )
-                );
-
+        Usuario usuario = usuarioRepository.findByCorreo(request.getCorreo()).orElseThrow(() -> new IllegalArgumentException("No existe un usuario con ese correo"));
         String token = UUID.randomUUID().toString();
 
         usuario.setTokenRecuperacion(token);
-        usuario.setTokenRecuperacionExpira(
-                LocalDateTime.now().plusMinutes(30)
-        );
-
+        usuario.setTokenRecuperacionExpira(LocalDateTime.now().plusMinutes(30));
         usuarioRepository.save(usuario);
-
         return token;
     }
 
@@ -101,27 +72,14 @@ public class AuthService {
                 .stream()
                 .filter(u -> request.getToken().equals(u.getTokenRecuperacion()))
                 .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Token de recuperación inválido"
-                        )
-                );
+                .orElseThrow(() -> new IllegalArgumentException("Token de recuperación inválido"));
 
-        if (usuario.getTokenRecuperacionExpira() == null
-                || usuario.getTokenRecuperacionExpira().isBefore(LocalDateTime.now())) {
-
-            throw new IllegalArgumentException(
-                    "El token de recuperación ha expirado"
-            );
+        if (usuario.getTokenRecuperacionExpira() == null || usuario.getTokenRecuperacionExpira().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("El token de recuperación ha expirado");
         }
-
-        usuario.setPassword(
-                passwordEncoder.encode(request.getPassword())
-        );
-
+        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         usuario.setTokenRecuperacion(null);
         usuario.setTokenRecuperacionExpira(null);
-
         usuarioRepository.save(usuario);
     }
 }

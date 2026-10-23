@@ -18,9 +18,7 @@ public class ServicioCateringService {
 
     private final ServicioCateringRepository repository;
 
-    public ServicioCateringService(
-            ServicioCateringRepository repository) {
-
+    public ServicioCateringService(ServicioCateringRepository repository) {
         this.repository = repository;
     }
 
@@ -36,25 +34,16 @@ public class ServicioCateringService {
 
     @Transactional(readOnly = true)
     public ServicioCatering findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Servicio de catering no encontrado con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Servicio de catering no encontrado con id: " + id));
     }
 
     @Transactional(readOnly = true)
     public ServicioCatering findActivoById(Long id) {
 
         ServicioCatering servicio = findById(id);
-
         if (!Boolean.TRUE.equals(servicio.getActivo())) {
-            throw new IllegalArgumentException(
-                    "El servicio de catering seleccionado no está activo"
-            );
+            throw new IllegalArgumentException("El servicio de catering seleccionado no está activo");
         }
-
         return servicio;
     }
 
@@ -72,34 +61,21 @@ public class ServicioCateringService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository.findByNombreContainingIgnoreCase(
-                    nombre,
-                    pageable
-            );
+            return repository.findByNombreContainingIgnoreCase(nombre, pageable);
         }
 
         if (tipo != null && !tipo.isBlank()) {
-            return repository.findByTipoContainingIgnoreCase(
-                    tipo,
-                    pageable
-            );
+            return repository.findByTipoContainingIgnoreCase(tipo, pageable);
         }
 
         if (activo != null) {
-            return repository.findByActivo(
-                    activo,
-                    pageable
-            );
+            return repository.findByActivo(activo, pageable);
         }
-
         return repository.findAll(pageable);
     }
 
@@ -116,67 +92,40 @@ public class ServicioCateringService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository
-                    .findByActivoTrueAndNombreContainingIgnoreCase(
-                            nombre,
-                            pageable
-                    );
+            return repository.findByActivoTrueAndNombreContainingIgnoreCase(nombre, pageable);
         }
 
         if (tipo != null && !tipo.isBlank()) {
-            return repository
-                    .findByActivoTrueAndTipoContainingIgnoreCase(
-                            tipo,
-                            pageable
-                    );
+            return repository.findByActivoTrueAndTipoContainingIgnoreCase(tipo, pageable);
         }
-
         return repository.findByActivoTrue(pageable);
     }
 
-    public ServicioCatering save(
-            ServicioCatering entity) {
-
+    public ServicioCatering save(ServicioCatering entity) {
         return repository.save(entity);
     }
 
-    public ServicioCatering update(
-            Long id,
-            ServicioCatering entity) {
-
+    public ServicioCatering update(Long id, ServicioCatering entity) {
         ServicioCatering current = findById(id);
-
         copyFields(current, entity);
-
         return repository.save(current);
     }
 
     public void delete(Long id) {
-
         ServicioCatering current = findById(id);
-
         current.setActivo(false);
-
         repository.save(current);
     }
 
-    private void copyFields(
-            ServicioCatering current,
-            ServicioCatering incoming) {
-
+    private void copyFields(ServicioCatering current, ServicioCatering incoming) {
         current.setNombre(incoming.getNombre());
         current.setTipo(incoming.getTipo());
-        current.setPrecioPorPersona(
-                incoming.getPrecioPorPersona()
-        );
+        current.setPrecioPorPersona(incoming.getPrecioPorPersona());
         current.setActivo(incoming.getActivo());
     }
 }

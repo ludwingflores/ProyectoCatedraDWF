@@ -34,10 +34,6 @@ public class EspacioController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR ESPACIOS
-    // =========================================================
-
     @Operation(
             summary = "Listar espacios",
             description = "Obtiene la lista completa de todos los espacios registrados en el sistema."
@@ -61,9 +57,6 @@ public class EspacioController {
         return service.findAll();
     }
 
-    // =========================================================
-    // FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
 
     @Operation(
             summary = "Buscar espacios",
@@ -105,24 +98,9 @@ public class EspacioController {
             @RequestParam(defaultValue = "asc")
             String direction) {
 
-        Page<Espacio> resultado =
-                service.search(
-                        nombre,
-                        tipo,
-                        capacidad,
-                        disponible,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
-
+        Page<Espacio> resultado = service.search(nombre, tipo, capacidad, disponible, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
-
-    // =========================================================
-    // OBTENER ESPACIO POR ID
-    // =========================================================
 
     @Operation(
             summary = "Obtener espacio por ID",
@@ -148,17 +126,9 @@ public class EspacioController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Espacio> findById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+    public ResponseEntity<Espacio> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
-
-    // =========================================================
-    // CREAR ESPACIO
-    // =========================================================
 
     @Operation(
             summary = "Registrar nuevo espacio",
@@ -184,19 +154,9 @@ public class EspacioController {
             )
     })
     @PostMapping
-    public ResponseEntity<Espacio> create(
-            @Valid @RequestBody Espacio entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        service.save(entity)
-                );
+    public ResponseEntity<Espacio> create(@Valid @RequestBody Espacio entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
-
-    // =========================================================
-    // ACTUALIZAR ESPACIO
-    // =========================================================
 
     @Operation(
             summary = "Actualizar espacio",
@@ -229,18 +189,9 @@ public class EspacioController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Espacio> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Espacio entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Espacio> update(@PathVariable Long id, @Valid @RequestBody Espacio entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
-
-    // =========================================================
-    // ELIMINAR ESPACIO
-    // =========================================================
 
     @Operation(
             summary = "Eliminar espacio",
@@ -257,13 +208,8 @@ public class EspacioController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

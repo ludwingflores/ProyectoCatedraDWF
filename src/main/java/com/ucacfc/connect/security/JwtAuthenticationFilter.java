@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+// Clase que sirve para autentificar los JWT creados
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -23,66 +24,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(
-            JwtService jwtService,
-            UserDetailsService userDetailsService,
-            TokenBlacklistService tokenBlacklistService) {
-
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService, TokenBlacklistService tokenBlacklistService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 
+        // La palabra Bearer indica que el cliente está enviando un token de acceso.
+        // Despues el codigo comprueba si la cabecera existe y tiene el formato esperado
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Elimina los primeros siete caracteres de la cabecera, que corresponden a Bearer
+        // Ahora la variable jwt contiene unicamente el token que se analizará
         final String jwt = authHeader.substring(7);
 
         // Un token revocado no puede volver a autenticar al usuario.
         if (tokenBlacklistService.isRevoked(jwt)) {
-            response.sendError(
-                    HttpServletResponse.SC_UNAUTHORIZED,
-                    "Token revocado"
-            );
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token revocado");
             return;
         }
 
         try {
             final String correo = jwtService.extractUsername(jwt);
 
-            if (correo != null
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (correo != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(correo);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(correo);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
-
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authToken);
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
 

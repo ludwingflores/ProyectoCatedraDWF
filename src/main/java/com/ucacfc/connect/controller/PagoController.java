@@ -38,10 +38,6 @@ public class PagoController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR TODOS
-    // =========================================================
-
     @Operation(
         summary = "Listar pagos",
         description = "Obtiene todos los pagos registrados."
@@ -62,10 +58,6 @@ public class PagoController {
     public List<Pago> findAll() {
         return service.findAll();
     }
-
-    // =========================================================
-    // PAGINACIÓN Y FILTROS
-    // =========================================================
 
     @Operation(
         summary = "Consultar pagos con filtros",
@@ -91,47 +83,27 @@ public class PagoController {
             Pageable pageable) {
 
         if (tipo != null && estado != null) {
-            return service.findByTipoAndEstado(
-                    tipo,
-                    estado,
-                    pageable
-            );
+            return service.findByTipoAndEstado(tipo, estado, pageable);
         }
 
         if (tipo != null) {
-            return service.findByTipo(
-                    tipo,
-                    pageable
+            return service.findByTipo(tipo, pageable
             );
         }
 
         if (metodo != null) {
-            return service.findByMetodo(
-                    metodo,
-                    pageable
-            );
+            return service.findByMetodo(metodo, pageable);
         }
 
         if (estado != null) {
-            return service.findByEstado(
-                    estado,
-                    pageable
-            );
+            return service.findByEstado(estado, pageable);
         }
 
         if (clienteId != null) {
-            return service.findByClienteId(
-                    clienteId,
-                    pageable
-            );
+            return service.findByClienteId(clienteId, pageable);
         }
-
         return service.findAllPage(pageable);
     }
-
-    // =========================================================
-    // BUSCAR POR ID
-    // =========================================================
 
     @Operation(
         summary = "Obtener pago por ID",
@@ -160,10 +132,6 @@ public class PagoController {
         );
     }
 
-    // =========================================================
-    // CREAR
-    // =========================================================
-
     @Operation(
         summary = "Registrar nuevo pago",
         description = "Registra un nuevo pago validando sus datos."
@@ -183,17 +151,9 @@ public class PagoController {
         )
     })
     @PostMapping
-    public ResponseEntity<Pago> create(
-            @Valid @RequestBody Pago entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+    public ResponseEntity<Pago> create(@Valid @RequestBody Pago entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
-
-    // =========================================================
-    // ACTUALIZAR
-    // =========================================================
 
     @Operation(
         summary = "Actualizar pago",
@@ -218,18 +178,9 @@ public class PagoController {
         )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Pago> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Pago entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Pago> update(@PathVariable Long id, @Valid @RequestBody Pago entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
-
-    // =========================================================
-    // ELIMINAR
-    // =========================================================
 
     @Operation(
         summary = "Eliminar pago",
@@ -246,13 +197,8 @@ public class PagoController {
         )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

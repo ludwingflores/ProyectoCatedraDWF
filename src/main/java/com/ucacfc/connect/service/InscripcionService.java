@@ -33,29 +33,19 @@ public class InscripcionService {
     private final CursoRepository cursoRepository;
     private final ClienteRepository clienteRepository;
 
-    public InscripcionService(
-            InscripcionRepository repository,
-            CursoRepository cursoRepository,
-            ClienteRepository clienteRepository) {
-
+    public InscripcionService(InscripcionRepository repository, CursoRepository cursoRepository, ClienteRepository clienteRepository) {
         this.repository = repository;
         this.cursoRepository = cursoRepository;
         this.clienteRepository = clienteRepository;
     }
 
-    // =========================================================
     // LISTAR INSCRIPCIONES
-    // =========================================================
-
     @Transactional(readOnly = true)
     public List<Inscripcion> findAll() {
         return repository.findAll();
     }
 
-    // =========================================================
     // FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
-
     @Transactional(readOnly = true)
     public Page<Inscripcion> search(
             Long clienteId,
@@ -67,159 +57,82 @@ public class InscripcionService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable = PageRequest.of(
-                page,
-                size,
-                sort
-        );
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (clienteId != null) {
-            return repository.findByClienteId(
-                    clienteId,
-                    pageable
-            );
+            return repository.findByClienteId(clienteId, pageable);
         }
 
         if (cursoId != null) {
-            return repository.findByCursoId(
-                    cursoId,
-                    pageable
-            );
+            return repository.findByCursoId(cursoId, pageable);
         }
 
         if (estado != null) {
-            return repository.findByEstado(
-                    estado,
-                    pageable
-            );
+            return repository.findByEstado(estado, pageable);
         }
 
         if (fecha != null) {
-            return repository.findByFecha(
-                    fecha,
-                    pageable
-            );
+            return repository.findByFecha(fecha, pageable);
         }
-
         return repository.findAll(pageable);
     }
 
-    // =========================================================
     // OBTENER INSCRIPCIÓN POR ID
-    // =========================================================
-
     @Transactional(readOnly = true)
     public Inscripcion findById(Long id) {
-
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Inscripcion no encontrada con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada con id: " + id));
     }
 
-    // =========================================================
     // CREAR INSCRIPCIÓN
-    // =========================================================
-
     public Inscripcion save(Inscripcion entity) {
-
         validarInscripcion(entity, null);
-
         return repository.save(entity);
     }
 
-    // =========================================================
     // ACTUALIZAR INSCRIPCIÓN
-    // =========================================================
-
-    public Inscripcion update(
-            Long id,
-            Inscripcion entity) {
+    public Inscripcion update(Long id, Inscripcion entity) {
 
         Inscripcion current = findById(id);
-
         validarInscripcion(entity, current);
-
         copyFields(current, entity);
-
         return repository.save(current);
     }
 
-    // =========================================================
     // ELIMINAR INSCRIPCIÓN
-    // =========================================================
-
     public void delete(Long id) {
-
         Inscripcion current = findById(id);
-
         repository.delete(current);
     }
 
-    // =========================================================
     // VALIDAR INSCRIPCIÓN
-    // =========================================================
+    private void validarInscripcion(Inscripcion incoming, Inscripcion current) {
 
-    private void validarInscripcion(
-            Inscripcion incoming,
-            Inscripcion current) {
-
-        if (incoming.getCliente() == null
-                || incoming.getCliente().getId() == null) {
-
-            throw new IllegalArgumentException(
-                    "Debe indicar un cliente válido"
-            );
+        if (incoming.getCliente() == null || incoming.getCliente().getId() == null) {
+            throw new IllegalArgumentException("Debe indicar un cliente válido");
         }
 
-        if (incoming.getCurso() == null
-                || incoming.getCurso().getId() == null) {
+        if (incoming.getCurso() == null || incoming.getCurso().getId() == null) {
 
-            throw new IllegalArgumentException(
-                    "Debe indicar un curso válido"
-            );
+            throw new IllegalArgumentException("Debe indicar un curso válido");
         }
 
         if (incoming.getEstado() == null) {
-
-            throw new IllegalArgumentException(
-                    "Debe indicar el estado de la inscripción"
-            );
+            throw new IllegalArgumentException("Debe indicar el estado de la inscripción");
         }
 
-        Long clienteId =
-                incoming.getCliente().getId();
+        Long clienteId = incoming.getCliente().getId();
 
-        Long cursoId =
-                incoming.getCurso().getId();
+        Long cursoId = incoming.getCurso().getId();
 
         // Comprobar que el cliente exista y obtener
         // sus datos completos.
-        Cliente cliente =
-                clienteRepository.findById(clienteId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Cliente no encontrado con id: "
-                                                + clienteId
-                                )
-                        );
+        Cliente cliente = clienteRepository.findById(clienteId).orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + clienteId));
 
         // Comprobar que el curso exista y obtener
         // sus datos completos.
-        Curso curso =
-                cursoRepository.findById(cursoId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Curso no encontrado con id: "
-                                                + cursoId
-                                )
-                        );
+        Curso curso = cursoRepository.findById(cursoId).orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con id: " + cursoId));
 
         // Usar las entidades recuperadas de la base de datos.
         incoming.setCliente(cliente);
@@ -227,65 +140,25 @@ public class InscripcionService {
 
         // Una inscripción cancelada no ocupa cupo ni bloquea
         // una nueva inscripción del mismo cliente.
-        if (incoming.getEstado()
-                == EstadoInscripcion.CANCELADA) {
-
+        if (incoming.getEstado() == EstadoInscripcion.CANCELADA) {
             return;
         }
 
-        boolean mismoClienteYCurso =
-                current != null
-                        && current.getCliente()
-                                .getId()
-                                .equals(clienteId)
-                        && current.getCurso()
-                                .getId()
-                                .equals(cursoId);
+        boolean mismoClienteYCurso = current != null && current.getCliente().getId().equals(clienteId) && current.getCurso().getId().equals(cursoId);
 
-        if (!mismoClienteYCurso
-                && repository
-                        .existsByClienteIdAndCursoIdAndEstadoNot(
-                                clienteId,
-                                cursoId,
-                                EstadoInscripcion.CANCELADA
-                        )) {
-
-            throw new IllegalArgumentException(
-                    "El cliente ya tiene una inscripción no cancelada en este curso"
-            );
+        if (!mismoClienteYCurso && repository.existsByClienteIdAndCursoIdAndEstadoNot(clienteId, cursoId, EstadoInscripcion.CANCELADA)) {
+            throw new IllegalArgumentException("El cliente ya tiene una inscripción no cancelada en este curso");
         }
 
-        long cuposOcupados =
-                repository.countByCursoIdAndEstadoIn(
-                        cursoId,
-                        ESTADOS_QUE_OCUPAN_CUPO
-                );
-
-        boolean yaOcupabaCupoEnEsteCurso =
-                current != null
-                        && current.getCurso()
-                                .getId()
-                                .equals(cursoId)
-                        && ESTADOS_QUE_OCUPAN_CUPO
-                                .contains(current.getEstado());
-
-        if (!yaOcupabaCupoEnEsteCurso
-                && cuposOcupados >= curso.getCupoMaximo()) {
-
-            throw new IllegalArgumentException(
-                    "El curso no tiene cupos disponibles"
-            );
+        long cuposOcupados = repository.countByCursoIdAndEstadoIn(cursoId, ESTADOS_QUE_OCUPAN_CUPO);
+        boolean yaOcupabaCupoEnEsteCurso = current != null && current.getCurso().getId().equals(cursoId) && ESTADOS_QUE_OCUPAN_CUPO.contains(current.getEstado());
+        if (!yaOcupabaCupoEnEsteCurso && cuposOcupados >= curso.getCupoMaximo()) {
+            throw new IllegalArgumentException("El curso no tiene cupos disponibles");
         }
     }
 
-    // =========================================================
     // COPIAR CAMPOS
-    // =========================================================
-
-    private void copyFields(
-            Inscripcion current,
-            Inscripcion incoming) {
-
+    private void copyFields(Inscripcion current, Inscripcion incoming) {
         current.setCliente(incoming.getCliente());
         current.setCurso(incoming.getCurso());
         current.setFecha(incoming.getFecha());

@@ -37,10 +37,6 @@ public class InscripcionController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR INSCRIPCIONES
-    // =========================================================
-
     @Operation(
             summary = "Listar inscripciones",
             description = "Obtiene la lista completa de todas las inscripciones registradas en el sistema."
@@ -63,10 +59,6 @@ public class InscripcionController {
     public List<Inscripcion> findAll() {
         return service.findAll();
     }
-
-    // =========================================================
-    // BÚSQUEDA + FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
 
     @Operation(
             summary = "Buscar inscripciones",
@@ -105,23 +97,9 @@ public class InscripcionController {
             @RequestParam(defaultValue = "fecha") String sortBy,
             @RequestParam(defaultValue = "desc") String direction) {
 
-        Page<Inscripcion> resultado = service.search(
-                clienteId,
-                cursoId,
-                estado,
-                fecha,
-                page,
-                size,
-                sortBy,
-                direction
-        );
-
+        Page<Inscripcion> resultado = service.search(clienteId, cursoId, estado, fecha, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
-
-    // =========================================================
-    // OBTENER INSCRIPCIÓN POR ID
-    // =========================================================
 
     @Operation(
             summary = "Obtener inscripción por ID",
@@ -144,17 +122,9 @@ public class InscripcionController {
         )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Inscripcion> findById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+    public ResponseEntity<Inscripcion> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
-
-    // =========================================================
-    // CREAR INSCRIPCIÓN
-    // =========================================================
 
     @Operation(
             summary = "Registrar nueva inscripción",
@@ -177,17 +147,9 @@ public class InscripcionController {
         )
     })
     @PostMapping
-    public ResponseEntity<Inscripcion> create(
-            @Valid @RequestBody Inscripcion entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+    public ResponseEntity<Inscripcion> create(@Valid @RequestBody Inscripcion entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
-
-    // =========================================================
-    // ACTUALIZAR INSCRIPCIÓN
-    // =========================================================
 
     @Operation(
             summary = "Actualizar inscripción",
@@ -214,18 +176,9 @@ public class InscripcionController {
         )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Inscripcion> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Inscripcion entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Inscripcion> update(@PathVariable Long id, @Valid @RequestBody Inscripcion entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
-
-    // =========================================================
-    // ELIMINAR INSCRIPCIÓN
-    // =========================================================
 
     @Operation(
             summary = "Eliminar inscripción",
@@ -242,11 +195,8 @@ public class InscripcionController {
         )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
         return ResponseEntity.noContent().build();
     }
 }

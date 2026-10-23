@@ -10,19 +10,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DiplomadoRepository extends JpaRepository<Diplomado, Long> {
 
-    Page<Diplomado> findByNombreContainingIgnoreCase(
-            String nombre,
-            Pageable pageable
-    );
+    Page<Diplomado> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
 
     List<Diplomado> findByActivoTrue();
 
-    Page<Diplomado> findByActivoTrue(
-            Pageable pageable
-    );
+    Page<Diplomado> findByActivoTrue(Pageable pageable);
 
-    Page<Diplomado> findByActivoTrueAndNombreContainingIgnoreCase(
-            String nombre,
-            Pageable pageable
-    );
+    Page<Diplomado> findByActivoTrueAndNombreContainingIgnoreCase(String nombre, Pageable pageable);
 }

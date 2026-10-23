@@ -32,9 +32,7 @@ public class ServicioCateringController {
 
     private final ServicioCateringService service;
 
-    public ServicioCateringController(
-            ServicioCateringService service) {
-
+    public ServicioCateringController(ServicioCateringService service) {
         this.service = service;
     }
 
@@ -61,13 +59,10 @@ public class ServicioCateringController {
             )
     })
     @GetMapping
-    public List<ServicioCatering> findAll(
-            Authentication authentication) {
-
+    public List<ServicioCatering> findAll(Authentication authentication) {
         if (esAdmin(authentication)) {
             return service.findAll();
         }
-
         return service.findAllActivos();
     }
 
@@ -114,34 +109,15 @@ public class ServicioCateringController {
         Page<ServicioCatering> resultado;
 
         if (esAdmin(authentication)) {
-
-            resultado = service.search(
-                    nombre,
-                    tipo,
-                    activo,
-                    page,
-                    size,
-                    sortBy,
-                    direction
-            );
-
+            resultado = service.search(nombre, tipo, activo, page, size, sortBy, direction);
         } else {
-
             /*
              * El parámetro "activo" se ignora para usuarios
              * no administradores. Siempre se limita la consulta
              * a servicios activos.
              */
-            resultado = service.searchActivos(
-                    nombre,
-                    tipo,
-                    page,
-                    size,
-                    sortBy,
-                    direction
-            );
+            resultado = service.searchActivos(nombre, tipo, page, size, sortBy, direction);
         }
-
         return ResponseEntity.ok(resultado);
     }
 
@@ -170,19 +146,13 @@ public class ServicioCateringController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ServicioCatering> findById(
-            @PathVariable Long id,
-            Authentication authentication) {
+    public ResponseEntity<ServicioCatering> findById(@PathVariable Long id, Authentication authentication) {
 
         if (esAdmin(authentication)) {
-            return ResponseEntity.ok(
-                    service.findById(id)
-            );
+            return ResponseEntity.ok(service.findById(id));
         }
 
-        return ResponseEntity.ok(
-                service.findActivoById(id)
-        );
+        return ResponseEntity.ok(service.findActivoById(id));
     }
 
     @Operation(
@@ -206,12 +176,9 @@ public class ServicioCateringController {
             )
     })
     @PostMapping
-    public ResponseEntity<ServicioCatering> create(
-            @Valid @RequestBody ServicioCatering entity) {
+    public ResponseEntity<ServicioCatering> create(@Valid @RequestBody ServicioCatering entity) {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @Operation(
@@ -235,13 +202,9 @@ public class ServicioCateringController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ServicioCatering> update(
-            @PathVariable Long id,
-            @Valid @RequestBody ServicioCatering entity) {
+    public ResponseEntity<ServicioCatering> update(@PathVariable Long id, @Valid @RequestBody ServicioCatering entity) {
 
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
     @Operation(
@@ -262,27 +225,15 @@ public class ServicioCateringController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
-    private boolean esAdmin(
-            Authentication authentication) {
-
+    private boolean esAdmin(Authentication authentication) {
         if (authentication == null) {
             return false;
         }
-
-        return authentication
-                .getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).anyMatch("ROLE_ADMIN"::equals);
     }
 }

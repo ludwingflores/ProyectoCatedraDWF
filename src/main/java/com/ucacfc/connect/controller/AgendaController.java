@@ -37,10 +37,7 @@ public class AgendaController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR AGENDAS
-    // =========================================================
-
+    // Listar agendas
     @Operation(
             summary = "Listar agendas",
             description = "Obtiene la lista completa de todas las agendas registradas en el sistema."
@@ -64,10 +61,7 @@ public class AgendaController {
         return service.findAll();
     }
 
-    // =========================================================
-    // FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
-
+    // Filtros con paginacion y ordenamiento
     @Operation(
             summary = "Buscar agendas",
             description = """
@@ -109,25 +103,11 @@ public class AgendaController {
             @RequestParam(defaultValue = "asc")
             String direction) {
 
-        Page<Agenda> resultado =
-                service.search(
-                        titulo,
-                        fecha,
-                        tipo,
-                        espacioId,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
-
+        Page<Agenda> resultado = service.search(titulo, fecha, tipo, espacioId, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
 
-    // =========================================================
-    // OBTENER AGENDA POR ID
-    // =========================================================
-
+    // Obtener agenda por ID
     @Operation(
             summary = "Obtener agenda por ID",
             description = "Retorna el detalle de una agenda específica según su identificador único."
@@ -152,18 +132,11 @@ public class AgendaController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Agenda> findById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+    public ResponseEntity<Agenda> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
-    // =========================================================
-    // CREAR AGENDA
-    // =========================================================
-
+    // Crear agenda
     @Operation(
             summary = "Registrar nueva agenda",
             description = "Crea un nuevo registro de agenda validando campos obligatorios y conflictos de horario."
@@ -188,20 +161,12 @@ public class AgendaController {
             )
     })
     @PostMapping
-    public ResponseEntity<Agenda> create(
-            @Valid @RequestBody Agenda entity) {
+    public ResponseEntity<Agenda> create(@Valid @RequestBody Agenda entity) {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        service.save(entity)
-                );
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
-    // =========================================================
-    // ACTUALIZAR AGENDA
-    // =========================================================
-
+    // Actualizar agenda
     @Operation(
             summary = "Actualizar agenda",
             description = "Actualiza una agenda existente validando posibles conflictos de horario."
@@ -233,19 +198,12 @@ public class AgendaController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Agenda> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Agenda entity) {
+    public ResponseEntity<Agenda> update(@PathVariable Long id, @Valid @RequestBody Agenda entity) {
 
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
-    // =========================================================
-    // ELIMINAR AGENDA
-    // =========================================================
-
+    // Eliminar agenda
     @Operation(
             summary = "Eliminar agenda",
             description = "Elimina un registro de agenda mediante su ID."
@@ -261,13 +219,9 @@ public class AgendaController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
 
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

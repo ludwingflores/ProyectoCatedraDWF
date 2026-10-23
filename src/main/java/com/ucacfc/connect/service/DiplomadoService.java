@@ -21,12 +21,7 @@ public class DiplomadoService {
     private final ModalidadService modalidadService;
     private final DocenteService docenteService;
 
-    public DiplomadoService(
-            DiplomadoRepository repository,
-            CategoriaService categoriaService,
-            ModalidadService modalidadService,
-            DocenteService docenteService) {
-
+    public DiplomadoService(DiplomadoRepository repository, CategoriaService categoriaService, ModalidadService modalidadService, DocenteService docenteService) {
         this.repository = repository;
         this.categoriaService = categoriaService;
         this.modalidadService = modalidadService;
@@ -51,14 +46,9 @@ public class DiplomadoService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        return repository.findByNombreContainingIgnoreCase(
-                nombre,
-                PageRequest.of(page, size, sort)
-        );
+        return repository.findByNombreContainingIgnoreCase(nombre, PageRequest.of(page, size, sort));
     }
 
     @Transactional(readOnly = true)
@@ -69,22 +59,12 @@ public class DiplomadoService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable = PageRequest.of(
-                page,
-                size,
-                sort
-        );
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository
-                    .findByActivoTrueAndNombreContainingIgnoreCase(
-                            nombre,
-                            pageable
-                    );
+            return repository.findByActivoTrueAndNombreContainingIgnoreCase(nombre, pageable);
         }
 
         return repository.findByActivoTrue(pageable);
@@ -92,12 +72,7 @@ public class DiplomadoService {
 
     @Transactional(readOnly = true)
     public Diplomado findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Diplomado no encontrado con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Diplomado no encontrado con id: " + id));
     }
 
     @Transactional(readOnly = true)
@@ -106,9 +81,7 @@ public class DiplomadoService {
         Diplomado diplomado = findById(id);
 
         if (!Boolean.TRUE.equals(diplomado.getActivo())) {
-            throw new ResourceNotFoundException(
-                    "Diplomado no encontrado con id: " + id
-            );
+            throw new ResourceNotFoundException("Diplomado no encontrado con id: " + id);
         }
 
         return diplomado;
@@ -117,37 +90,28 @@ public class DiplomadoService {
     public Diplomado save(Diplomado entity) {
         validarFechas(entity);
         validarCatalogos(entity);
-
         return repository.save(entity);
     }
 
     public Diplomado update(Long id, Diplomado entity) {
         validarFechas(entity);
         validarCatalogos(entity);
-
         Diplomado current = findById(id);
         copyFields(current, entity);
-
         return repository.save(current);
     }
 
     public void delete(Long id) {
         Diplomado current = findById(id);
-
         current.setActivo(false);
-
         repository.save(current);
     }
 
     private void validarFechas(Diplomado diplomado) {
 
-        if (diplomado.getFechaInicio() != null
-                && diplomado.getFechaFin() != null
-                && diplomado.getFechaFin().isBefore(diplomado.getFechaInicio())) {
+        if (diplomado.getFechaInicio() != null && diplomado.getFechaFin() != null && diplomado.getFechaFin().isBefore(diplomado.getFechaInicio())) {
 
-            throw new IllegalArgumentException(
-                    "La fecha de fin del diplomado no puede ser anterior a la fecha de inicio"
-            );
+            throw new IllegalArgumentException("La fecha de fin del diplomado no puede ser anterior a la fecha de inicio");
         }
     }
 
@@ -156,53 +120,31 @@ public class DiplomadoService {
         if (diplomado.getCategoria() != null) {
 
             if (diplomado.getCategoria().getId() == null) {
-                throw new IllegalArgumentException(
-                        "La categoría seleccionada debe tener un id"
-                );
+                throw new IllegalArgumentException("La categoría seleccionada debe tener un id");
             }
 
-            diplomado.setCategoria(
-                    categoriaService.findActivaById(
-                            diplomado.getCategoria().getId()
-                    )
-            );
+            diplomado.setCategoria(categoriaService.findActivaById(diplomado.getCategoria().getId()));
         }
 
         if (diplomado.getModalidad() != null) {
 
             if (diplomado.getModalidad().getId() == null) {
-                throw new IllegalArgumentException(
-                        "La modalidad seleccionada debe tener un id"
-                );
+                throw new IllegalArgumentException("La modalidad seleccionada debe tener un id");
             }
 
-            diplomado.setModalidad(
-                    modalidadService.findActivaById(
-                            diplomado.getModalidad().getId()
-                    )
-            );
+            diplomado.setModalidad(modalidadService.findActivaById(diplomado.getModalidad().getId()));
         }
 
         if (diplomado.getDocente() != null) {
 
             if (diplomado.getDocente().getId() == null) {
-                throw new IllegalArgumentException(
-                        "El docente seleccionado debe tener un id"
-                );
+                throw new IllegalArgumentException("El docente seleccionado debe tener un id");
             }
-
-            diplomado.setDocente(
-                    docenteService.findActivoById(
-                            diplomado.getDocente().getId()
-                    )
-            );
+            diplomado.setDocente(docenteService.findActivoById(diplomado.getDocente().getId()));
         }
     }
 
-    private void copyFields(
-            Diplomado current,
-            Diplomado incoming) {
-
+    private void copyFields(Diplomado current, Diplomado incoming) {
         current.setNombre(incoming.getNombre());
         current.setDescripcion(incoming.getDescripcion());
         current.setCategoria(incoming.getCategoria());

@@ -14,34 +14,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface AgendaRepository extends JpaRepository<Agenda, Long> {
 
-    // =========================================================
-    // FILTROS + PAGINACIÓN
-    // =========================================================
+    Page<Agenda> findByTituloContainingIgnoreCase(String titulo, Pageable pageable);
 
-    Page<Agenda> findByTituloContainingIgnoreCase(
-            String titulo,
-            Pageable pageable
-    );
+    Page<Agenda> findByFecha(LocalDate fecha, Pageable pageable);
 
-    Page<Agenda> findByFecha(
-            LocalDate fecha,
-            Pageable pageable
-    );
+    Page<Agenda> findByTipo(TipoEvento tipo, Pageable pageable);
 
-    Page<Agenda> findByTipo(
-            TipoEvento tipo,
-            Pageable pageable
-    );
+    Page<Agenda> findByEspacioId(Long espacioId, Pageable pageable);
 
-    Page<Agenda> findByEspacioId(
-            Long espacioId,
-            Pageable pageable
-    );
-
-    // =========================================================
-    // VALIDACIÓN DE CONFLICTOS
-    // =========================================================
-
+    // Validacion de conflictos
     /*
      * Comprueba si existe otra agenda que utilice el mismo espacio,
      * en la misma fecha y cuyo horario se cruce con el solicitado.

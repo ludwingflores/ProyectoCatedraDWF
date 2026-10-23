@@ -29,12 +29,7 @@ public class RolService {
 
     @Transactional(readOnly = true)
     public Rol findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Rol no encontrado con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con id: " + id));
     }
 
     @Transactional(readOnly = true)
@@ -45,20 +40,13 @@ public class RolService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository.findByNombreContainingIgnoreCase(
-                    nombre,
-                    pageable
-            );
+            return repository.findByNombreContainingIgnoreCase(nombre, pageable);
         }
-
         return repository.findAll(pageable);
     }
 
@@ -67,25 +55,17 @@ public class RolService {
     }
 
     public Rol update(Long id, Rol entity) {
-
         Rol current = findById(id);
-
         copyFields(current, entity);
-
         return repository.save(current);
     }
 
     public void delete(Long id) {
-
         Rol current = findById(id);
-
         repository.delete(current);
     }
 
-    private void copyFields(
-            Rol current,
-            Rol incoming) {
-
+    private void copyFields(Rol current, Rol incoming) {
         current.setNombre(incoming.getNombre());
     }
 }

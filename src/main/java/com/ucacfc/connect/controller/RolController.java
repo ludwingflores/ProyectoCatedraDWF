@@ -87,15 +87,7 @@ public class RolController {
             @RequestParam(defaultValue = "asc")
             String direction) {
 
-        Page<Rol> resultado =
-                service.search(
-                        nombre,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
-
+        Page<Rol> resultado = service.search(nombre, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
 
@@ -120,12 +112,8 @@ public class RolController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Rol> findById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+    public ResponseEntity<Rol> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @Operation(
@@ -143,12 +131,8 @@ public class RolController {
             )
     })
     @PostMapping
-    public ResponseEntity<Rol> create(
-            @Valid @RequestBody Rol entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+    public ResponseEntity<Rol> create(@Valid @RequestBody Rol entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @Operation(
@@ -166,13 +150,8 @@ public class RolController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Rol> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Rol entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Rol> update(@PathVariable Long id, @Valid @RequestBody Rol entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
     @Operation(
@@ -190,13 +169,8 @@ public class RolController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

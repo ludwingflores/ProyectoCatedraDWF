@@ -38,10 +38,6 @@ public class CateringController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR CATERING
-    // =========================================================
-
     @Operation(
         summary = "Listar catering",
         description = "Los clientes consultan únicamente sus propias solicitudes. Los usuarios administrativos autorizados consultan todos los registros."
@@ -62,15 +58,10 @@ public class CateringController {
     public List<Catering> findAll(Authentication authentication) {
 
         if (esCliente(authentication)) {
-            return service.findAllByClienteCorreo(
-                    authentication.getName());
+            return service.findAllByClienteCorreo(authentication.getName());
         }
-
         return service.findAll();
     }
-        // =========================================================
-    // FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
 
     @Operation(
         summary = "Buscar catering",
@@ -117,41 +108,12 @@ public class CateringController {
 
         if (esCliente(authentication)) {
 
-            Page<Catering> resultado =
-                    service.searchByClienteCorreo(
-                            authentication.getName(),
-                            servicioCateringId,
-                            tipoServicio,
-                            estado,
-                            fecha,
-                            page,
-                            size,
-                            sortBy,
-                            direction
-                    );
-
+            Page<Catering> resultado = service.searchByClienteCorreo(authentication.getName(), servicioCateringId, tipoServicio, estado, fecha, page, size, sortBy, direction);
             return ResponseEntity.ok(resultado);
         }
-
-        Page<Catering> resultado =
-                service.search(
-                        clienteId,
-                        servicioCateringId,
-                        tipoServicio,
-                        estado,
-                        fecha,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
-
+        Page<Catering> resultado = service.search(clienteId, servicioCateringId, tipoServicio, estado, fecha, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
-
-    // =========================================================
-    // OBTENER CATERING POR ID
-    // =========================================================
 
     @Operation(
         summary = "Obtener catering por ID",
@@ -173,28 +135,14 @@ public class CateringController {
         )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Catering> findById(
-            @PathVariable Long id,
-            Authentication authentication) {
+    public ResponseEntity<Catering> findById(@PathVariable Long id,Authentication authentication) {
 
         if (esCliente(authentication)) {
-
-            return ResponseEntity.ok(
-                    service.findByIdAndClienteCorreo(
-                            id,
-                            authentication.getName()
-                    )
-            );
+            return ResponseEntity.ok(service.findByIdAndClienteCorreo(id, authentication.getName()));
         }
 
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+        return ResponseEntity.ok(service.findById(id));
     }
-
-    // =========================================================
-    // CREAR CATERING
-    // =========================================================
 
     @Operation(
         summary = "Registrar nuevo catering",
@@ -221,23 +169,10 @@ public class CateringController {
         )
     })
     @PostMapping
-    public ResponseEntity<Catering> create(
-            @Valid @RequestBody Catering entity,
-            Authentication authentication) {
+    public ResponseEntity<Catering> create(@Valid @RequestBody Catering entity, Authentication authentication) {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        service.save(
-                                entity,
-                                authentication
-                        )
-                );
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity, authentication));
     }
-
-    // =========================================================
-    // ACTUALIZAR CATERING
-    // =========================================================
 
     @Operation(
         summary = "Actualizar catering",
@@ -264,18 +199,10 @@ public class CateringController {
         )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Catering> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Catering entity) {
+    public ResponseEntity<Catering> update(@PathVariable Long id, @Valid @RequestBody Catering entity) {
 
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+        return ResponseEntity.ok(service.update(id, entity));
     }
-
-    // =========================================================
-    // ELIMINAR CATERING
-    // =========================================================
 
     @Operation(
         summary = "Eliminar catering",
@@ -292,27 +219,13 @@ public class CateringController {
         )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
         return ResponseEntity.noContent().build();
     }
 
-    // =========================================================
-    // UTILIDADES DE SEGURIDAD
-    // =========================================================
+    private boolean esCliente(Authentication authentication) {
 
-    private boolean esCliente(
-            Authentication authentication) {
-
-        return authentication != null
-                && authentication.getAuthorities()
-                        .stream()
-                        .anyMatch(authority ->
-                                authority.getAuthority()
-                                        .equals("ROLE_CLIENTE")
-                        );
+        return authentication != null && authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_CLIENTE"));
     }
 }

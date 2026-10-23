@@ -28,13 +28,10 @@ public class DocenteController {
 
     @GetMapping
     @Operation(summary = "Listar docentes")
-    public ResponseEntity<List<Docente>> listar(
-            Authentication authentication
-    ) {
+    public ResponseEntity<List<Docente>> listar(Authentication authentication) {
         if (esAdmin(authentication)) {
             return ResponseEntity.ok(docenteService.findAll());
         }
-
         return ResponseEntity.ok(docenteService.findAllActivos());
     }
 
@@ -52,39 +49,18 @@ public class DocenteController {
             Authentication authentication
     ) {
         if (esAdmin(authentication)) {
-            return ResponseEntity.ok(
-                    docenteService.search(
-                            nombre,
-                            activo,
-                            page,
-                            size,
-                            sortBy,
-                            direction
-                    )
-            );
+            return ResponseEntity.ok(docenteService.search(nombre, activo, page, size, sortBy, direction));
         }
 
-        return ResponseEntity.ok(
-                docenteService.searchActivos(
-                        nombre,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                )
-        );
+        return ResponseEntity.ok(docenteService.searchActivos(nombre, page, size, sortBy, direction));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener docente por ID")
-    public ResponseEntity<Docente> obtenerPorId(
-            @PathVariable Long id,
-            Authentication authentication
-    ) {
+    public ResponseEntity<Docente> obtenerPorId(@PathVariable Long id, Authentication authentication) {
         if (esAdmin(authentication)) {
             return ResponseEntity.ok(docenteService.findById(id));
         }
-
         return ResponseEntity.ok(
                 docenteService.findActivoById(id)
         );
@@ -92,28 +68,19 @@ public class DocenteController {
 
     @PostMapping
     @Operation(summary = "Crear docente")
-    public ResponseEntity<Docente> crear(
-            @Valid @RequestBody Docente docente
-    ) {
+    public ResponseEntity<Docente> crear(@Valid @RequestBody Docente docente) {
         return ResponseEntity.ok(docenteService.save(docente));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar docente")
-    public ResponseEntity<Docente> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody Docente docente
-    ) {
-        return ResponseEntity.ok(
-                docenteService.update(id, docente)
-        );
+    public ResponseEntity<Docente> actualizar(@PathVariable Long id, @Valid @RequestBody Docente docente) {
+        return ResponseEntity.ok(docenteService.update(id, docente));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Inactivar docente")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id
-    ) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         docenteService.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -122,11 +89,6 @@ public class DocenteController {
         if (authentication == null) {
             return false;
         }
-
-        return authentication.getAuthorities()
-                .stream()
-                .anyMatch(authority ->
-                        authority.getAuthority().equals("ROLE_ADMIN")
-                );
+        return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 }

@@ -35,28 +35,18 @@ public class AlquilerController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR
-    // =========================================================
-
+    // Listar
     @GetMapping
     @Operation(summary = "Listar alquileres")
-    public List<Alquiler> findAll(
-            Authentication authentication) {
+    public List<Alquiler> findAll(Authentication authentication) {
 
         if (esCliente(authentication)) {
-            return service.findAllByClienteCorreo(
-                    authentication.getName()
-            );
+            return service.findAllByClienteCorreo(authentication.getName());
         }
-
         return service.findAll();
     }
 
-    // =========================================================
-    // FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
-
+    // Filtros con paginacion y ordenamiento
     @GetMapping("/buscar")
     @Operation(
             summary = "Buscar alquileres",
@@ -99,115 +89,52 @@ public class AlquilerController {
 
         if (esCliente(authentication)) {
 
-            Page<Alquiler> resultado =
-                    service.searchByClienteCorreo(
-                            authentication.getName(),
-                            espacioId,
-                            estado,
-                            fecha,
-                            page,
-                            size,
-                            sortBy,
-                            direction
-                    );
-
+            Page<Alquiler> resultado = service.searchByClienteCorreo(authentication.getName(),espacioId, estado, fecha, page, size, sortBy, direction);
             return ResponseEntity.ok(resultado);
         }
 
-        Page<Alquiler> resultado =
-                service.search(
-                        clienteId,
-                        espacioId,
-                        estado,
-                        fecha,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
-
+        Page<Alquiler> resultado = service.search(clienteId, espacioId, estado, fecha, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
 
-    // =========================================================
-    // OBTENER POR ID
-    // =========================================================
-
+    // Obtener por ID
     @GetMapping("/{id}")
     @Operation(summary = "Obtener alquiler por ID")
-    public ResponseEntity<Alquiler> findById(
-            @PathVariable Long id,
-            Authentication authentication) {
+    public ResponseEntity<Alquiler> findById(@PathVariable Long id, Authentication authentication) {
 
         if (esCliente(authentication)) {
-            return ResponseEntity.ok(
-                    service.findByIdAndClienteCorreo(
-                            id,
-                            authentication.getName()
-                    )
-            );
+            return ResponseEntity.ok(service.findByIdAndClienteCorreo(id, authentication.getName()));
         }
 
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+        return ResponseEntity.ok(service.findById(id));
     }
 
-    // =========================================================
-    // CREAR
-    // =========================================================
-
+    // Crear
     @PostMapping
     @Operation(summary = "Registrar un alquiler")
-    public ResponseEntity<Alquiler> create(
-            @Valid @RequestBody Alquiler entity,
-            Authentication authentication) {
+    public ResponseEntity<Alquiler> create(@Valid @RequestBody Alquiler entity, Authentication authentication) {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        service.save(
-                                entity,
-                                authentication
-                        )
-                );
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity, authentication));
     }
 
-    // =========================================================
-    // ACTUALIZAR
-    // =========================================================
-
+    // Actualizar
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un alquiler")
-    public ResponseEntity<Alquiler> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Alquiler entity) {
+    public ResponseEntity<Alquiler> update(@PathVariable Long id, @Valid @RequestBody Alquiler entity) {
 
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
-    // =========================================================
-    // ELIMINAR
-    // =========================================================
-
+    // Eliminar
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar un alquiler")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
 
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
-    // =========================================================
-    // DISPONIBILIDAD - RF09
-    // =========================================================
-
+    // Disponibilidad
     @GetMapping("/disponibilidad")
     @Operation(
             summary = "Consultar disponibilidad de un espacio",
@@ -219,37 +146,13 @@ public class AlquilerController {
             @RequestParam LocalTime horaInicio,
             @RequestParam LocalTime horaFin) {
 
-        boolean disponible =
-                service.estaDisponible(
-                        espacioId,
-                        fecha,
-                        horaInicio,
-                        horaFin
-                );
+        boolean disponible = service.estaDisponible(espacioId, fecha, horaInicio, horaFin);
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "disponible",
-                        disponible
-                )
-        );
+        return ResponseEntity.ok(Map.of("disponible", disponible));
     }
 
-    // =========================================================
-    // UTILIDAD DE SEGURIDAD
-    // =========================================================
-
-    private boolean esCliente(
-            Authentication authentication) {
-
-        return authentication != null
-                && authentication
-                .getAuthorities()
-                .stream()
-                .anyMatch(authority ->
-                        authority
-                                .getAuthority()
-                                .equals("ROLE_CLIENTE")
-                );
+    // Utilidad de seguridad
+    private boolean esCliente(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_CLIENTE"));
     }
 }

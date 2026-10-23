@@ -8,8 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class TokenBlacklistService {
 
-    private final Set<String> revokedTokens =
-            ConcurrentHashMap.newKeySet();
+    private final Set<String> revokedTokens = ConcurrentHashMap.newKeySet();
 
     public void revokeToken(String token) {
         revokedTokens.add(token);

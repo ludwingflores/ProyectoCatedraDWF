@@ -34,12 +34,7 @@ public class CategoriaService {
 
     @Transactional(readOnly = true)
     public Categoria findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Categoría no encontrada con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con id: " + id));
     }
 
     @Transactional(readOnly = true)
@@ -48,9 +43,7 @@ public class CategoriaService {
         Categoria categoria = findById(id);
 
         if (!Boolean.TRUE.equals(categoria.getActivo())) {
-            throw new IllegalArgumentException(
-                    "La categoría seleccionada no está activa"
-            );
+            throw new IllegalArgumentException("La categoría seleccionada no está activa");
         }
 
         return categoria;
@@ -65,27 +58,17 @@ public class CategoriaService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository.findByNombreContainingIgnoreCase(
-                    nombre,
-                    pageable
-            );
+            return repository.findByNombreContainingIgnoreCase(nombre, pageable);
         }
 
         if (activo != null) {
-            return repository.findByActivo(
-                    activo,
-                    pageable
-            );
+            return repository.findByActivo(activo, pageable);
         }
-
         return repository.findAll(pageable);
     }
 
@@ -97,19 +80,12 @@ public class CategoriaService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository
-                    .findByActivoTrueAndNombreContainingIgnoreCase(
-                            nombre,
-                            pageable
-                    );
+            return repository.findByActivoTrueAndNombreContainingIgnoreCase(nombre, pageable);
         }
 
         return repository.findByActivoTrue(pageable);
@@ -119,24 +95,17 @@ public class CategoriaService {
         return repository.save(entity);
     }
 
-    public Categoria update(
-            Long id,
-            Categoria entity) {
+    public Categoria update(Long id, Categoria entity) {
 
         Categoria current = findById(id);
-
         current.setNombre(entity.getNombre());
         current.setActivo(entity.getActivo());
-
         return repository.save(current);
     }
 
     public void delete(Long id) {
-
         Categoria current = findById(id);
-
         current.setActivo(false);
-
         repository.save(current);
     }
 }

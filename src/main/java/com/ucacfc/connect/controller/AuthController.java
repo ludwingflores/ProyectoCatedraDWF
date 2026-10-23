@@ -29,10 +29,7 @@ public class AuthController {
     private final AuthService authService;
     private final TokenBlacklistService tokenBlacklistService;
 
-    public AuthController(
-            AuthService authService,
-            TokenBlacklistService tokenBlacklistService) {
-
+    public AuthController(AuthService authService, TokenBlacklistService tokenBlacklistService) {
         this.authService = authService;
         this.tokenBlacklistService = tokenBlacklistService;
     }
@@ -47,9 +44,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
             @ApiResponse(responseCode = "401", description = "Correo o contraseña incorrectos")
     })
-    public ResponseEntity<AuthResponse> login(
-            @Valid @RequestBody LoginRequest request) {
-
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -67,14 +62,11 @@ public class AuthController {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401)
-                    .body("Token no proporcionado");
+            return ResponseEntity.status(401).body("Token no proporcionado");
         }
 
         String token = authHeader.substring(7);
-
         tokenBlacklistService.revokeToken(token);
-
         return ResponseEntity.ok("Sesión cerrada correctamente");
     }
 
@@ -87,11 +79,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Token de recuperación generado"),
             @ApiResponse(responseCode = "400", description = "Correo inválido o usuario no encontrado")
     })
-    public ResponseEntity<String> forgotPassword(
-            @Valid @RequestBody ForgotPasswordRequest request) {
-
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         String token = authService.requestPasswordReset(request);
-
         return ResponseEntity.ok(token);
     }
 
@@ -104,11 +93,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Contraseña actualizada correctamente"),
             @ApiResponse(responseCode = "400", description = "Token inválido, expirado o datos incorrectos")
     })
-    public ResponseEntity<String> resetPassword(
-            @Valid @RequestBody ResetPasswordRequest request) {
-
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
-
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
 }

@@ -97,18 +97,7 @@ public class UsuarioController {
             @RequestParam(defaultValue = "asc")
             String direction) {
 
-        Page<Usuario> resultado =
-                service.search(
-                        nombre,
-                        correo,
-                        rolId,
-                        activo,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
-
+        Page<Usuario> resultado = service.search(nombre, correo, rolId, activo, page, size, sortBy, direction);
         return ResponseEntity.ok(resultado);
     }
 
@@ -136,12 +125,8 @@ public class UsuarioController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> findById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                service.findById(id)
-        );
+    public ResponseEntity<Usuario> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @Operation(
@@ -168,14 +153,8 @@ public class UsuarioController {
             )
     })
     @PostMapping
-    public ResponseEntity<Usuario> create(
-            @Valid @RequestBody Usuario entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        service.save(entity)
-                );
+    public ResponseEntity<Usuario> create(@Valid @RequestBody Usuario entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @Operation(
@@ -209,13 +188,8 @@ public class UsuarioController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Usuario entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Usuario> update(@PathVariable Long id, @Valid @RequestBody Usuario entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
     @Operation(
@@ -236,13 +210,8 @@ public class UsuarioController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -18,15 +18,9 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
 
     Page<Pago> findByEstado(EstadoPago estado, Pageable pageable);
 
-    Page<Pago> findByTipoAndEstado(
-            TipoPago tipo,
-            EstadoPago estado,
-            Pageable pageable
-    );
+    Page<Pago> findByTipoAndEstado(TipoPago tipo, EstadoPago estado, Pageable pageable);
 
-    Page<Pago> findByClienteId(
-            Long clienteId,
-            Pageable pageable
-    );
+    Page<Pago> findByClienteId(Long clienteId, Pageable pageable);
+    
     List<Pago> findByClienteIdOrderByFechaDesc(Long clienteId);
 }

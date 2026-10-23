@@ -21,14 +21,7 @@ public class HistorialClienteResponse {
     public HistorialClienteResponse() {
     }
 
-    public HistorialClienteResponse(
-            Cliente cliente,
-            List<Inscripcion> inscripciones,
-            List<Cotizacion> cotizaciones,
-            List<Alquiler> alquileres,
-            List<Catering> catering,
-            List<Pago> pagos) {
-
+    public HistorialClienteResponse(Cliente cliente, List<Inscripcion> inscripciones, List<Cotizacion> cotizaciones, List<Alquiler> alquileres, List<Catering> catering, List<Pago> pagos) {
         this.cliente = cliente;
         this.inscripciones = inscripciones;
         this.cotizaciones = cotizaciones;

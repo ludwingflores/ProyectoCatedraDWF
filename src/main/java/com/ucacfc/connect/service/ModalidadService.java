@@ -34,12 +34,7 @@ public class ModalidadService {
 
     @Transactional(readOnly = true)
     public Modalidad findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Modalidad no encontrada con id: " + id
-                        )
-                );
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Modalidad no encontrada con id: " + id));
     }
 
     @Transactional(readOnly = true)
@@ -48,11 +43,8 @@ public class ModalidadService {
         Modalidad modalidad = findById(id);
 
         if (!Boolean.TRUE.equals(modalidad.getActivo())) {
-            throw new IllegalArgumentException(
-                    "La modalidad seleccionada no está activa"
-            );
+            throw new IllegalArgumentException("La modalidad seleccionada no está activa");
         }
-
         return modalidad;
     }
 
@@ -65,25 +57,16 @@ public class ModalidadService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository.findByNombreContainingIgnoreCase(
-                    nombre,
-                    pageable
-            );
+            return repository.findByNombreContainingIgnoreCase(nombre, pageable);
         }
 
         if (activo != null) {
-            return repository.findByActivo(
-                    activo,
-                    pageable
-            );
+            return repository.findByActivo(activo, pageable);
         }
 
         return repository.findAll(pageable);
@@ -97,19 +80,12 @@ public class ModalidadService {
             String sortBy,
             String direction) {
 
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, sort);
+        PageRequest pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return repository
-                    .findByActivoTrueAndNombreContainingIgnoreCase(
-                            nombre,
-                            pageable
-                    );
+            return repository.findByActivoTrueAndNombreContainingIgnoreCase(nombre, pageable);
         }
 
         return repository.findByActivoTrue(pageable);
@@ -119,24 +95,18 @@ public class ModalidadService {
         return repository.save(entity);
     }
 
-    public Modalidad update(
-            Long id,
-            Modalidad entity) {
+    public Modalidad update(Long id, Modalidad entity) {
 
         Modalidad current = findById(id);
-
         current.setNombre(entity.getNombre());
         current.setActivo(entity.getActivo());
-
         return repository.save(current);
     }
 
     public void delete(Long id) {
 
         Modalidad current = findById(id);
-
         current.setActivo(false);
-
         repository.save(current);
     }
 }

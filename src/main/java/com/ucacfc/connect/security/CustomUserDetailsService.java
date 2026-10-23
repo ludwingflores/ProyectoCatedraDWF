@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+// Clase que sirve como puente para la Base de datos y Spring Security, con esta clase traemos los datos del usuario
+// y los guardamos en una clase de UserDetails, luego los datos dentro de esa clase los comparamos con los que vienen en el front
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -24,28 +26,17 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String correo)
-            throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String correo) throws UsernameNotFoundException {
 
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(
-                                "Usuario no encontrado con correo: " + correo
-                        )
-                );
+        // Traemos el usuario por su correo, si no lo encuentra manda una excepcion
+        Usuario usuario = usuarioRepository.findByCorreo(correo).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con correo: " + correo));
 
+        // Guardamos el rol y el nombre del usuario en una variable
         String rol = usuario.getRol().getNombre();
 
-        return User.builder()
-                .username(usuario.getCorreo())
-                .password(usuario.getPassword())
-                .authorities(
-                        List.of(
-                                new SimpleGrantedAuthority(
-                                        "ROLE_" + rol.toUpperCase()
-                                )
-                        )
-                )
+        // Con el .builder() guardamos esos datos del usuario en una clase UserDetails
+        return User.builder().username(usuario.getCorreo()).password(usuario.getPassword()).authorities(List.of(
+                new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase())))
                 .disabled(!usuario.getActivo())
                 .build();
     }

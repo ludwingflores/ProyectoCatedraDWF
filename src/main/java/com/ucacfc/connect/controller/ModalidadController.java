@@ -58,13 +58,11 @@ public class ModalidadController {
             )
     })
     @GetMapping
-    public List<Modalidad> findAll(
-            Authentication authentication) {
+    public List<Modalidad> findAll(Authentication authentication) {
 
         if (esAdmin(authentication)) {
             return service.findAll();
         }
-
         return service.findAllActivas();
     }
 
@@ -108,27 +106,11 @@ public class ModalidadController {
         Page<Modalidad> resultado;
 
         if (esAdmin(authentication)) {
-
-            resultado = service.search(
-                    nombre,
-                    activo,
-                    page,
-                    size,
-                    sortBy,
-                    direction
-            );
+            resultado = service.search(nombre, activo, page, size, sortBy, direction);
 
         } else {
-
-            resultado = service.searchActivas(
-                    nombre,
-                    page,
-                    size,
-                    sortBy,
-                    direction
-            );
+            resultado = service.searchActivas(nombre, page, size, sortBy, direction);
         }
-
         return ResponseEntity.ok(resultado);
     }
 
@@ -156,19 +138,13 @@ public class ModalidadController {
             )
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Modalidad> findById(
-            @PathVariable Long id,
-            Authentication authentication) {
+    public ResponseEntity<Modalidad> findById(@PathVariable Long id, Authentication authentication) {
 
         if (esAdmin(authentication)) {
-            return ResponseEntity.ok(
-                    service.findById(id)
-            );
+            return ResponseEntity.ok(service.findById(id));
         }
 
-        return ResponseEntity.ok(
-                service.findActivaById(id)
-        );
+        return ResponseEntity.ok(service.findActivaById(id));
     }
 
     @Operation(
@@ -186,12 +162,8 @@ public class ModalidadController {
             )
     })
     @PostMapping
-    public ResponseEntity<Modalidad> create(
-            @Valid @RequestBody Modalidad entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+    public ResponseEntity<Modalidad> create(@Valid @RequestBody Modalidad entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
 
     @Operation(
@@ -209,13 +181,8 @@ public class ModalidadController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Modalidad> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Modalidad entity) {
-
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+    public ResponseEntity<Modalidad> update(@PathVariable Long id, @Valid @RequestBody Modalidad entity) {
+        return ResponseEntity.ok(service.update(id, entity));
     }
 
     @Operation(
@@ -236,27 +203,15 @@ public class ModalidadController {
             )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
-    private boolean esAdmin(
-            Authentication authentication) {
-
+    private boolean esAdmin(Authentication authentication) {
         if (authentication == null) {
             return false;
         }
-
-        return authentication
-                .getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).anyMatch("ROLE_ADMIN"::equals);
     }
 }

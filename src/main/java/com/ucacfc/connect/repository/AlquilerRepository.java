@@ -14,81 +14,34 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface AlquilerRepository
-        extends JpaRepository<Alquiler, Long> {
+public interface AlquilerRepository extends JpaRepository<Alquiler, Long> {
 
-    // =========================================================
-    // CONSULTAS EXISTENTES DEL CLIENTE
-    // =========================================================
+    // Consultas existentes en el cliente
+    List<Alquiler> findByClienteCorreoIgnoreCase(String correo);
 
-    List<Alquiler> findByClienteCorreoIgnoreCase(
-            String correo
-    );
+    Optional<Alquiler> findByIdAndClienteCorreoIgnoreCase(Long id, String correo);
 
-    Optional<Alquiler> findByIdAndClienteCorreoIgnoreCase(
-            Long id,
-            String correo
-    );
+    List<Alquiler> findByEstado(EstadoAlquiler estado);
 
-    List<Alquiler> findByEstado(
-            EstadoAlquiler estado
-    );
+    // Filtros generales y paginacion 
+    Page<Alquiler> findByClienteId(Long clienteId, Pageable pageable);
 
-    // =========================================================
-    // FILTROS GENERALES + PAGINACIÓN
-    // =========================================================
+    Page<Alquiler> findByEspacioId(Long espacioId, Pageable pageable);
 
-    Page<Alquiler> findByClienteId(
-            Long clienteId,
-            Pageable pageable
-    );
+    Page<Alquiler> findByEstado(EstadoAlquiler estado, Pageable pageable);
 
-    Page<Alquiler> findByEspacioId(
-            Long espacioId,
-            Pageable pageable
-    );
+    Page<Alquiler> findByFecha(LocalDate fecha, Pageable pageable);
 
-    Page<Alquiler> findByEstado(
-            EstadoAlquiler estado,
-            Pageable pageable
-    );
+    // Filtros del cliente autenticado
+    Page<Alquiler> findByClienteCorreoIgnoreCase(String correo, Pageable pageable);
 
-    Page<Alquiler> findByFecha(
-            LocalDate fecha,
-            Pageable pageable
-    );
+    Page<Alquiler> findByClienteCorreoIgnoreCaseAndEstado(String correo, EstadoAlquiler estado, Pageable pageable);
 
-    // =========================================================
-    // FILTROS DEL CLIENTE AUTENTICADO
-    // =========================================================
+    Page<Alquiler> findByClienteCorreoIgnoreCaseAndFecha(String correo, LocalDate fecha, Pageable pageable);
 
-    Page<Alquiler> findByClienteCorreoIgnoreCase(
-            String correo,
-            Pageable pageable
-    );
+    Page<Alquiler> findByClienteCorreoIgnoreCaseAndEspacioId(String correo, Long espacioId, Pageable pageable);
 
-    Page<Alquiler> findByClienteCorreoIgnoreCaseAndEstado(
-            String correo,
-            EstadoAlquiler estado,
-            Pageable pageable
-    );
-
-    Page<Alquiler> findByClienteCorreoIgnoreCaseAndFecha(
-            String correo,
-            LocalDate fecha,
-            Pageable pageable
-    );
-
-    Page<Alquiler> findByClienteCorreoIgnoreCaseAndEspacioId(
-            String correo,
-            Long espacioId,
-            Pageable pageable
-    );
-
-    // =========================================================
-    // CONFLICTOS DE HORARIO
-    // =========================================================
-
+    // Conflictos de horario
     @Query("""
             SELECT COUNT(a) > 0
             FROM Alquiler a

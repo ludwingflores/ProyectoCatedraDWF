@@ -35,10 +35,6 @@ public class DiplomadoController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR TODOS LOS DIPLOMADOS
-    // =========================================================
-
     @Operation(
             summary = "Listar diplomados",
             description = "Obtiene la lista completa de todos los diplomados registrados en el sistema."
@@ -62,13 +58,8 @@ public class DiplomadoController {
             if (esAdmin(authentication)) {
                     return service.findAll();
             }
-
             return service.findAllActivos();
     }
-
-    // =========================================================
-    // FILTRO + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
 
     @Operation(
             summary = "Buscar diplomados",
@@ -95,7 +86,7 @@ public class DiplomadoController {
     })
 
     @GetMapping("/buscar")
-public Page<Diplomado> search(
+        public Page<Diplomado> search(
         @RequestParam(defaultValue = "") String nombre,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
@@ -104,26 +95,10 @@ public Page<Diplomado> search(
                 Authentication authentication) {
 
         if (esAdmin(authentication)) {
-                return service.searchByNombre(
-                                nombre,
-                                page,
-                                size,
-                                sortBy,
-                                direction);
+                return service.searchByNombre(nombre, page, size, sortBy, direction);
         }
-
-        return service.searchActivosByNombre(
-                        nombre,
-                        page,
-                        size,
-                        sortBy,
-                        direction);
+        return service.searchActivosByNombre(nombre, page, size, sortBy, direction);
 }
-
-
-    // =========================================================
-    // OBTENER DIPLOMADO POR ID
-    // =========================================================
 
     @Operation(
             summary = "Obtener diplomado por ID",
@@ -146,22 +121,15 @@ public Page<Diplomado> search(
     })
 
     @GetMapping("/{id}")
-public ResponseEntity<Diplomado> findById(
-        @PathVariable Long id,
-                Authentication authentication) {
+        public ResponseEntity<Diplomado> findById(
+        @PathVariable Long id, Authentication authentication) {
 
         if (esAdmin(authentication)) {
-                return ResponseEntity.ok(
-                                service.findById(id));
+                return ResponseEntity.ok(service.findById(id));
         }
 
-        return ResponseEntity.ok(
-                        service.findActivoById(id));
+        return ResponseEntity.ok(service.findActivoById(id));
 }
-
-    // =========================================================
-    // CREAR DIPLOMADO
-    // =========================================================
 
     @Operation(
             summary = "Registrar nuevo diplomado",
@@ -191,10 +159,6 @@ public ResponseEntity<Diplomado> findById(
                 .body(service.save(entity));
     }
 
-    // =========================================================
-    // ACTUALIZAR DIPLOMADO
-    // =========================================================
-
     @Operation(
             summary = "Actualizar diplomado",
             description = "Actualiza los datos de un diplomado existente identificado por su ID."
@@ -220,18 +184,10 @@ public ResponseEntity<Diplomado> findById(
         )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Diplomado> update(
-            @PathVariable Long id,
-            @Valid @RequestBody Diplomado entity) {
+    public ResponseEntity<Diplomado> update(@PathVariable Long id, @Valid @RequestBody Diplomado entity) {
 
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+        return ResponseEntity.ok(service.update(id, entity));
     }
-
-    // =========================================================
-    // ELIMINAR DIPLOMADO
-    // =========================================================
 
     @Operation(
             summary = "Eliminar diplomado",
@@ -249,22 +205,16 @@ public ResponseEntity<Diplomado> findById(
         )
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-                    @PathVariable Long id) {
-
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
             service.delete(id);
             return ResponseEntity.noContent().build();
     }
 
     private boolean esAdmin(Authentication authentication) {
-
             if (authentication == null) {
                     return false;
             }
-
-            return authentication.getAuthorities()
-                            .stream()
-                            .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+            return authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 
 }

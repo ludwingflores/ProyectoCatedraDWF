@@ -10,50 +10,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
-    // =========================================================
-    // BÚSQUEDA POR NOMBRE
-    // =========================================================
+    // Busqueda por nombre
+    Page<Cliente> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
 
-    Page<Cliente> findByNombreContainingIgnoreCase(
-            String nombre,
-            Pageable pageable
-    );
+    // Busqueda por dui
+    Page<Cliente> findByDuiContainingIgnoreCase(String dui, Pageable pageable);
 
-    // =========================================================
-    // BÚSQUEDA POR DUI
-    // =========================================================
+    // Busqueda por NIT
+    Page<Cliente> findByNitContainingIgnoreCase(String nit, Pageable pageable);
 
-    Page<Cliente> findByDuiContainingIgnoreCase(
-            String dui,
-            Pageable pageable
-    );
+    // Busqueda por empresa
+    Page<Cliente> findByEmpresaContainingIgnoreCase(String empresa, Pageable pageable);
 
-    // =========================================================
-    // BÚSQUEDA POR NIT
-    // =========================================================
-
-    Page<Cliente> findByNitContainingIgnoreCase(
-            String nit,
-            Pageable pageable
-    );
-
-    // =========================================================
-    // BÚSQUEDA POR EMPRESA
-    // =========================================================
-
-    Page<Cliente> findByEmpresaContainingIgnoreCase(
-            String empresa,
-            Pageable pageable
-    );
-
-    // =========================================================
-    // BÚSQUEDA POR CORREO
-    // =========================================================
-
-    Page<Cliente> findByCorreoContainingIgnoreCase(
-            String correo,
-            Pageable pageable
-    );
+    // Busqueda por correo
+    Page<Cliente> findByCorreoContainingIgnoreCase(String correo, Pageable pageable);
 
     // Se conserva porque ya es utilizado para identificar
     // al cliente autenticado y por otras funciones del sistema.

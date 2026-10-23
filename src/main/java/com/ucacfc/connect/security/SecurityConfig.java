@@ -26,408 +26,221 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-
+        
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final CustomUserDetailsService userDetailsService;
 
-        public SecurityConfig(
-                        JwtAuthenticationFilter jwtAuthenticationFilter,
-                        CustomUserDetailsService userDetailsService) {
-
+        public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService userDetailsService) {
                 this.jwtAuthenticationFilter = jwtAuthenticationFilter;
                 this.userDetailsService = userDetailsService;
         }
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http)
-                        throws Exception {
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(corsConfigurationSource())).authorizeHttpRequests(auth -> auth
+                        
+                        // => Endpoints publicos
 
-                http
-                                .csrf(csrf -> csrf.disable())
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                        // Login
+                        .requestMatchers("/api/auth/**").permitAll()
 
-                                .authorizeHttpRequests(auth -> auth
+                        // Swagger / OpenAPI
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
-                                                // =====================================================
-                                                // ENDPOINTS PUBLICOS
-                                                // =====================================================
+                        // Health check
+                        .requestMatchers("/actuator/health").permitAll()
 
-                                                // Login
-                                                .requestMatchers("/api/auth/**")
-                                                .permitAll()
+                        // Manejo interno de errores
+                        .requestMatchers("/error").permitAll()
 
-                                                // Swagger / OpenAPI
-                                                .requestMatchers(
-                                                                "/swagger-ui/**",
-                                                                "/swagger-ui.html",
-                                                                "/v3/api-docs/**")
-                                                .permitAll()
+                        // => Administracion
 
-                                                // Health check
-                                                .requestMatchers("/actuator/health")
-                                                .permitAll()
+                        // Usuarios: solamente ADMIN
+                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
 
-                                                // Manejo interno de errores
-                                                .requestMatchers("/error")
-                                                .permitAll()
+                        // Roles: solamente ADMIN
+                        .requestMatchers("/api/roles/**").hasRole("ADMIN")
 
-                                                // =====================================================
-                                                // ADMINISTRACION
-                                                // =====================================================
+                        // => Catalogos academicos
+                        
+                        //Todos los roles operativos pueden consultar los catalogos academicos.
+                        // Los Controllers limitan a usuarios no ADMIN para que solamente puedan visualizar registros activos.
+                        .requestMatchers(HttpMethod.GET, "/api/categorias/**", "/api/modalidades/**", "/api/docentes/**")
+                        .hasAnyRole("ADMIN", "RECEPCIONISTA", "CONTABILIDAD", "CLIENTE")
 
-                                                // Usuarios: solamente ADMIN
-                                                .requestMatchers("/api/usuarios/**")
-                                                .hasRole("ADMIN")
+                        // Solamente ADMIN puede crear registros en los catalogos academicos.
+                        .requestMatchers(HttpMethod.POST, "/api/categorias/**", "/api/modalidades/**", "/api/docentes/**").hasRole("ADMIN")
 
-                                                // Roles: solamente ADMIN
-                                                .requestMatchers("/api/roles/**")
-                                                .hasRole("ADMIN")
+                        // Solamente ADMIN puede modificar registros de los catalogos academicos.
+                        .requestMatchers(HttpMethod.PUT, "/api/categorias/**", "/api/modalidades/**", "/api/docentes/**").hasRole("ADMIN")
 
-                                                // =====================================================
-                                                // CATALOGOS ACADEMICOS
-                                                // =====================================================
+                        // DELETE realiza baja logica solamente ADMIN puede ejecutarla.
+                        .requestMatchers(HttpMethod.DELETE, "/api/categorias/**", "/api/modalidades/**", "/api/docentes/**").hasRole("ADMIN")
 
-                                                // Todos los roles operativos pueden consultar
-                                                // los catalogos academicos.
-                                                // Los Controllers limitan a usuarios no ADMIN
-                                                // para que solamente puedan visualizar registros activos.
-                                                .requestMatchers(
-                                                                HttpMethod.GET,
-                                                                "/api/categorias/**",
-                                                                "/api/modalidades/**",
-                                                                "/api/docentes/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA",
-                                                                "CONTABILIDAD",
-                                                                "CLIENTE")
+                        // => Pagos 
 
-                                                // Solamente ADMIN puede crear registros
-                                                // en los catalogos academicos.
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/categorias/**",
-                                                                "/api/modalidades/**",
-                                                                "/api/docentes/**")
-                                                .hasRole("ADMIN")
+                        // Pagos: ADMIN y CONTABILIDAD
+                        .requestMatchers("/api/pagos/**").hasAnyRole("ADMIN", "CONTABILIDAD")
 
-                                                // Solamente ADMIN puede modificar registros
-                                                // de los catalogos academicos.
-                                                .requestMatchers(
-                                                                HttpMethod.PUT,
-                                                                "/api/categorias/**",
-                                                                "/api/modalidades/**",
-                                                                "/api/docentes/**")
-                                                .hasRole("ADMIN")
+                        // => Consultas operativas
 
-                                                // DELETE realiza baja logica.
-                                                // Solamente ADMIN puede ejecutarla.
-                                                .requestMatchers(
-                                                                HttpMethod.DELETE,
-                                                                "/api/categorias/**",
-                                                                "/api/modalidades/**",
-                                                                "/api/docentes/**")
-                                                .hasRole("ADMIN")
+                        // ADMIN, RECEPCIONISTA, CONTABILIDAD y CLIENTE pueden consultar informacion operativa.
+                        // Los controladores y servicios correspondientes limitan al CLIENTE a sus propios registros cuando aplica.
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/alquileres/**",
+                                "/api/cotizaciones/**")
+                                .hasAnyRole("ADMIN", "RECEPCIONISTA", "CONTABILIDAD", "CLIENTE")
 
-                                                // =====================================================
-                                                // PAGOS
-                                                // =====================================================
+                        // => Catering
 
-                                                // Pagos: ADMIN y CONTABILIDAD
-                                                .requestMatchers("/api/pagos/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "CONTABILIDAD")
+                        // ADMIN y RECEPCIONISTA pueden registrar solicitudes para clientes.
+                        // CLIENTE puede crear su propia solicitud, CateringService obtiene el cliente desde el JWT.
+                        .requestMatchers(HttpMethod.POST,"/api/catering/**").hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
 
-                                                // =====================================================
-                                                // CONSULTAS OPERATIVAS
-                                                // =====================================================
+                        // => Creacion de alquileres
 
-                                                // ADMIN, RECEPCIONISTA, CONTABILIDAD y CLIENTE
-                                                // pueden consultar informacion operativa.
-                                                //
-                                                // Los controladores y servicios correspondientes
-                                                // limitan al CLIENTE a sus propios registros
-                                                // cuando aplica.
-                                                .requestMatchers(
-                                                                HttpMethod.GET,
-                                                                "/api/clientes/**",
-                                                                "/api/agenda/**",
-                                                                "/api/cursos/**",
-                                                                "/api/diplomados/**",
-                                                                "/api/espacios/**",
-                                                                "/api/inscripciones/**",
-                                                                "/api/catering/**",
-                                                                "/api/alquileres/**",
-                                                                "/api/cotizaciones/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA",
-                                                                "CONTABILIDAD",
-                                                                "CLIENTE")
+                        // ADMIN y RECEPCIONISTA pueden registrar alquileres para cualquier cliente.
+                        // CLIENTE puede registrar su propio alquiler, AlquilerService obtiene el cliente desde el JWT.
+                        .requestMatchers(HttpMethod.POST, "/api/alquileres/**").hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
 
-                                                // =====================================================
-                                                // CREACION DE CATERING
-                                                // =====================================================
+                        // => Creacion de cotizaciones
 
-                                                // ADMIN y RECEPCIONISTA pueden registrar solicitudes
-                                                // para clientes.
-                                                //
-                                                // CLIENTE puede crear su propia solicitud.
-                                                // CateringService obtiene el cliente desde el JWT.
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/catering/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA",
-                                                                "CLIENTE")
+                        // ADMIN y RECEPCIONISTA pueden crear cotizaciones para cualquier cliente
+                        // CLIENTE puede solicitar su propia cotización, CotizacionService obtiene el cliente desde el JWT.
+                        .requestMatchers(HttpMethod.POST, "/api/cotizaciones/**").hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
 
-                                                // =====================================================
-                                                // CREACION DE ALQUILERES
-                                                // =====================================================
+                        // => Creacion de informacion operativa
 
-                                                // ADMIN y RECEPCIONISTA pueden registrar alquileres
-                                                // para cualquier cliente.
-                                                //
-                                                // CLIENTE puede registrar su propio alquiler.
-                                                // AlquilerService obtiene el cliente desde el JWT.
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/alquileres/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA",
-                                                                "CLIENTE")
+                        // Creacion de informacion operativa para que lo vea solamente el ADMIN y RECEPCIONISTA.
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**")
+                                .hasAnyRole("ADMIN", "RECEPCIONISTA")
 
-                                                // =====================================================
-                                                // CREACION DE COTIZACIONES
-                                                // =====================================================
+                        // => Actualizacion de informacion operativa
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/alquileres/**",
+                                "/api/cotizaciones/**")
+                                .hasAnyRole("ADMIN", "RECEPCIONISTA")
 
-                                                // ADMIN y RECEPCIONISTA pueden crear cotizaciones
-                                                // para cualquier cliente.
-                                                //
-                                                // CLIENTE puede solicitar su propia cotización.
-                                                // CotizacionService obtiene el cliente desde el JWT.
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/cotizaciones/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA",
-                                                                "CLIENTE")
-                                                // =====================================================
-                                                // CREACION DE INFORMACION OPERATIVA
-                                                // =====================================================
+                        // => Eliminacion de informacion operativa
 
-                                                // Resto de informacion operativa:
-                                                // solamente ADMIN y RECEPCIONISTA.
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/clientes/**",
-                                                                "/api/agenda/**",
-                                                                "/api/cursos/**",
-                                                                "/api/diplomados/**",
-                                                                "/api/espacios/**",
-                                                                "/api/inscripciones/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA")
+                        // Solamente ADMIN puede eliminar informacion operativa.
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/clientes/**",
+                                "/api/agenda/**",
+                                "/api/cursos/**",
+                                "/api/diplomados/**",
+                                "/api/espacios/**",
+                                "/api/inscripciones/**",
+                                "/api/catering/**",
+                                "/api/alquileres/**",
+                                "/api/cotizaciones/**")
+                                .hasRole("ADMIN")
 
-                                                // =====================================================
-                                                // ACTUALIZACION DE INFORMACION OPERATIVA
-                                                // =====================================================
+                        // => Catalogo de Servicios de catering
 
-                                                // ADMIN y RECEPCIONISTA
-                                                .requestMatchers(
-                                                                HttpMethod.PUT,
-                                                                "/api/clientes/**",
-                                                                "/api/agenda/**",
-                                                                "/api/cursos/**",
-                                                                "/api/diplomados/**",
-                                                                "/api/espacios/**",
-                                                                "/api/inscripciones/**",
-                                                                "/api/catering/**",
-                                                                "/api/alquileres/**",
-                                                                "/api/cotizaciones/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA")
+                        // ADMIN, RECEPCIONISTA y CLIENTE pueden consultar los servicios de catering disponibles.
+                        .requestMatchers(HttpMethod.GET, "/api/servicios-catering/**").hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
 
-                                                // =====================================================
-                                                // ELIMINACION DE INFORMACION OPERATIVA
-                                                // =====================================================
+                        // Solamente ADMIN puede crear servicios de catering.
+                        .requestMatchers(HttpMethod.POST, "/api/servicios-catering/**").hasRole("ADMIN")
 
-                                                // Solamente ADMIN puede eliminar informacion operativa.
-                                                .requestMatchers(
-                                                                HttpMethod.DELETE,
-                                                                "/api/clientes/**",
-                                                                "/api/agenda/**",
-                                                                "/api/cursos/**",
-                                                                "/api/diplomados/**",
-                                                                "/api/espacios/**",
-                                                                "/api/inscripciones/**",
-                                                                "/api/catering/**",
-                                                                "/api/alquileres/**",
-                                                                "/api/cotizaciones/**")
-                                                .hasRole("ADMIN")
+                        // Solamente ADMIN puede modificar el catalogo.
+                        .requestMatchers(HttpMethod.PUT, "/api/servicios-catering/**").hasRole("ADMIN")
 
-                                                // =====================================================
-                                                // CATALOGO DE SERVICIOS DE CATERING
-                                                // =====================================================
+                        // DELETE realiza borrado logico del servicio
+                        // Solamente ADMIN tiene permiso.
+                        .requestMatchers(HttpMethod.DELETE, "/api/servicios-catering/**").hasRole("ADMIN")
 
-                                                // ADMIN, RECEPCIONISTA y CLIENTE pueden consultar
-                                                // los servicios de catering disponibles.
-                                                .requestMatchers(
-                                                                HttpMethod.GET,
-                                                                "/api/servicios-catering/**")
-                                                .hasAnyRole(
-                                                                "ADMIN",
-                                                                "RECEPCIONISTA",
-                                                                "CLIENTE")
+                        // => Resto de Endpoints
 
-                                                // Solamente ADMIN puede crear servicios de catering.
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/servicios-catering/**")
-                                                .hasRole("ADMIN")
+                        // Todo endpoint no definido anteriormente requiere autenticacion.
+                        .anyRequest().authenticated())
 
-                                                // Solamente ADMIN puede modificar el catalogo.
-                                                .requestMatchers(
-                                                                HttpMethod.PUT,
-                                                                "/api/servicios-catering/**")
-                                                .hasRole("ADMIN")
+                        // => Manejo de errores de seguridad
 
-                                                // DELETE realiza borrado logico del servicio.
-                                                // Solamente ADMIN tiene permiso.
-                                                .requestMatchers(
-                                                                HttpMethod.DELETE,
-                                                                "/api/servicios-catering/**")
-                                                .hasRole("ADMIN")
+                        .exceptionHandling(exception -> exception
 
-                                                // =====================================================
-                                                // RESTO DE ENDPOINTS
-                                                // =====================================================
+                        // Usuario no autenticado -> 401
+                        .authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"No autorizado"))
 
-                                                // Todo endpoint no definido anteriormente
-                                                // requiere autenticacion.
-                                                .anyRequest()
-                                                .authenticated())
+                        // Usuario autenticado sin permisos -> 403
+                        .accessDeniedHandler((request, response, accessDeniedException) -> response.sendError(HttpServletResponse.SC_FORBIDDEN,"Acceso denegado")))
 
-                                // =============================================================
-                                // MANEJO DE ERRORES DE SEGURIDAD
-                                // =============================================================
+                        // => Sesion
 
-                                .exceptionHandling(exception -> exception
+                        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                                                // Usuario no autenticado -> 401
-                                                .authenticationEntryPoint(
-                                                                (request, response, authException) -> response
-                                                                                .sendError(
-                                                                                                HttpServletResponse.SC_UNAUTHORIZED,
-                                                                                                "No autorizado"))
+                        // Autenticacion
 
-                                                // Usuario autenticado sin permisos -> 403
-                                                .accessDeniedHandler(
-                                                                (request, response, accessDeniedException) -> response
-                                                                                .sendError(
-                                                                                                HttpServletResponse.SC_FORBIDDEN,
-                                                                                                "Acceso denegado")))
+                        .authenticationProvider(authenticationProvider())
 
-                                // =============================================================
-                                // SESION
-                                // =============================================================
-
-                                .sessionManagement(session -> session.sessionCreationPolicy(
-                                                SessionCreationPolicy.STATELESS))
-
-                                // =============================================================
-                                // AUTENTICACION
-                                // =============================================================
-
-                                .authenticationProvider(authenticationProvider())
-
-                                // JWT antes del filtro de autenticacion estandar
-                                .addFilterBefore(
-                                                jwtAuthenticationFilter,
-                                                UsernamePasswordAuthenticationFilter.class);
+                        // JWT antes del filtro de autenticacion estandar
+                        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }
 
-        // =================================================================
-        // AUTHENTICATION PROVIDER
-        // =================================================================
-
+        // Autentication provider
         @Bean
         public AuthenticationProvider authenticationProvider() {
 
                 DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-
                 provider.setPasswordEncoder(passwordEncoder());
-
                 return provider;
         }
 
-        // =================================================================
-        // AUTHENTICATION MANAGER
-        // =================================================================
-
+        // Autentication manager
         @Bean
-        public AuthenticationManager authenticationManager(
-                        AuthenticationConfiguration configuration)
-                        throws Exception {
-
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
                 return configuration.getAuthenticationManager();
         }
 
-        // =================================================================
-        // PASSWORD ENCODER
-        // =================================================================
-
+        // Password encoder
        @Bean
-public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-}
+       public PasswordEncoder passwordEncoder(){
+                return new BCryptPasswordEncoder();
+        }
 
-// =================================================================
-// CORS
-// =================================================================
+        // Cors
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-@Bean
-public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                
+                configuration.setAllowedOrigins(List.of("http://localhost:5173", "https://cfc-connect-frontend-william.azurewebsites.net"));
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
-        configuration.setAllowedOrigins(List.of(
-                      "http://localhost:5173",
-                      "https://cfc-connect-frontend-william.azurewebsites.net"));
+                configuration.setExposedHeaders(List.of("Authorization"));
 
-        configuration.setAllowedMethods(List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"));
+                configuration.setAllowCredentials(true);
 
-        configuration.setAllowedHeaders(List.of(
-                        "Authorization",
-                        "Content-Type"));
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        configuration.setExposedHeaders(List.of(
-                        "Authorization"));
-
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                        new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration(
-                        "/**",
-                        configuration);
-
-        return source;
-}
-
+                source.registerCorsConfiguration("/**", configuration);
+                
+                return source;
+        }
 
 }

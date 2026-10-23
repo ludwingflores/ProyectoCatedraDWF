@@ -33,19 +33,15 @@ public class DocenteService {
 
     @Transactional(readOnly = true)
     public Docente findById(Long id) {
-        return docenteRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Docente no encontrado"));
+        return docenteRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Docente no encontrado"));
     }
 
     @Transactional(readOnly = true)
     public Docente findActivoById(Long id) {
         Docente docente = findById(id);
-
         if (!Boolean.TRUE.equals(docente.getActivo())) {
             throw new IllegalArgumentException("Docente no encontrado");
         }
-
         return docente;
     }
 
@@ -58,9 +54,7 @@ public class DocenteService {
             String sortBy,
             String direction
     ) {
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -96,26 +90,11 @@ public class DocenteService {
         }
 
         if (activo != null) {
-            List<Docente> docentes =
-                    docenteRepository.findByActivo(activo);
-
-            int start = Math.min(
-                    (int) pageable.getOffset(),
-                    docentes.size()
-            );
-
-            int end = Math.min(
-                    start + pageable.getPageSize(),
-                    docentes.size()
-            );
-
-            return new org.springframework.data.domain.PageImpl<>(
-                    docentes.subList(start, end),
-                    pageable,
-                    docentes.size()
-            );
+            List<Docente> docentes = docenteRepository.findByActivo(activo);
+            int start = Math.min((int) pageable.getOffset(), docentes.size());
+            int end = Math.min(start + pageable.getPageSize(),docentes.size());
+            return new org.springframework.data.domain.PageImpl<>(docentes.subList(start, end), pageable, docentes.size());
         }
-
         return docenteRepository.findAll(pageable);
     }
 
@@ -127,18 +106,12 @@ public class DocenteService {
             String sortBy,
             String direction
     ) {
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
         if (nombre != null && !nombre.isBlank()) {
-            return docenteRepository
-                    .findByActivoTrueAndNombreContainingIgnoreCase(
-                            nombre,
-                            pageable
-                    );
+            return docenteRepository.findByActivoTrueAndNombreContainingIgnoreCase(nombre, pageable);
         }
 
         return docenteRepository.findByActivoTrue(pageable);

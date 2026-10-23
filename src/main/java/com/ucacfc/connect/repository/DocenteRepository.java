@@ -17,8 +17,5 @@ public interface DocenteRepository extends JpaRepository<Docente, Long> {
 
     Page<Docente> findByActivoTrue(Pageable pageable);
 
-    Page<Docente> findByActivoTrueAndNombreContainingIgnoreCase(
-            String nombre,
-            Pageable pageable
-    );
+    Page<Docente> findByActivoTrueAndNombreContainingIgnoreCase(String nombre, Pageable pageable);
 }

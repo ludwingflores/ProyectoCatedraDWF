@@ -37,10 +37,6 @@ public class ClienteController {
         this.service = service;
     }
 
-    // =========================================================
-    // LISTAR CLIENTES
-    // =========================================================
-
     @Operation(
             summary = "Listar clientes",
             description = "ADMIN, RECEPCIONISTA y CONTABILIDAD pueden consultar todos los clientes. CLIENTE consulta únicamente su propio registro."
@@ -63,19 +59,12 @@ public class ClienteController {
         String rol = obtenerRol(authentication);
 
         if ("CLIENTE".equals(rol)) {
-
-            Cliente cliente =
-                    service.findByCorreo(authentication.getName());
-
+            Cliente cliente = service.findByCorreo(authentication.getName());
             return ResponseEntity.ok(List.of(cliente));
         }
 
         return ResponseEntity.ok(service.findAll());
     }
-
-    // =========================================================
-    // BÚSQUEDA + FILTROS + PAGINACIÓN + ORDENAMIENTO
-    // =========================================================
 
     @Operation(
             summary = "Buscar clientes",
@@ -132,40 +121,11 @@ public class ClienteController {
          * que pueda consultar información perteneciente a terceros.
          */
         if ("CLIENTE".equals(rol)) {
-
-            return ResponseEntity.ok(
-                    service.search(
-                            "",
-                            null,
-                            null,
-                            null,
-                            authentication.getName(),
-                            page,
-                            size,
-                            sortBy,
-                            direction
-                    )
-            );
+            return ResponseEntity.ok(service.search("", null, null, null, authentication.getName(), page, size, sortBy, direction));
         }
-
-        Page<Cliente> resultado = service.search(
-                nombre,
-                dui,
-                nit,
-                empresa,
-                correo,
-                page,
-                size,
-                sortBy,
-                direction
-        );
-
+        Page<Cliente> resultado = service.search(nombre,dui,nit,empresa,correo,page,size,sortBy,direction);
         return ResponseEntity.ok(resultado);
     }
-
-    // =========================================================
-    // HISTORIAL DEL CLIENTE - RF14
-    // =========================================================
 
     @Operation(
             summary = "Consultar historial de un cliente",
@@ -205,23 +165,13 @@ public class ClienteController {
 
         String rol = obtenerRol(authentication);
 
-        if ("CLIENTE".equals(rol)
-                && !cliente.getCorreo()
-                        .equalsIgnoreCase(authentication.getName())) {
+        if ("CLIENTE".equals(rol) && !cliente.getCorreo().equalsIgnoreCase(authentication.getName())) {
 
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        return ResponseEntity.ok(
-                service.obtenerHistorial(id)
-        );
+        return ResponseEntity.ok(service.obtenerHistorial(id));
     }
-
-    // =========================================================
-    // OBTENER CLIENTE POR ID
-    // =========================================================
 
     @Operation(
             summary = "Obtener cliente por ID",
@@ -259,21 +209,11 @@ public class ClienteController {
 
         Cliente cliente = service.findById(id);
 
-        if ("CLIENTE".equals(rol)
-                && !cliente.getCorreo()
-                        .equalsIgnoreCase(authentication.getName())) {
-
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .build();
+        if ("CLIENTE".equals(rol) && !cliente.getCorreo().equalsIgnoreCase(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         return ResponseEntity.ok(cliente);
     }
-
-    // =========================================================
-    // CREAR CLIENTE
-    // =========================================================
 
     @Operation(
             summary = "Registrar nuevo cliente",
@@ -294,17 +234,9 @@ public class ClienteController {
         )
     })
     @PostMapping
-    public ResponseEntity<Cliente> create(
-            @Valid @RequestBody Cliente entity) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(entity));
+    public ResponseEntity<Cliente> create(@Valid @RequestBody Cliente entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
     }
-
-    // =========================================================
-    // ACTUALIZAR CLIENTE
-    // =========================================================
 
     @Operation(
             summary = "Actualizar cliente",
@@ -338,14 +270,8 @@ public class ClienteController {
             @PathVariable Long id,
             @Valid @RequestBody Cliente entity) {
 
-        return ResponseEntity.ok(
-                service.update(id, entity)
-        );
+        return ResponseEntity.ok(service.update(id, entity));
     }
-
-    // =========================================================
-    // ELIMINAR CLIENTE
-    // =========================================================
 
     @Operation(
             summary = "Eliminar cliente",
@@ -371,23 +297,10 @@ public class ClienteController {
             @PathVariable Long id) {
 
         service.delete(id);
-
         return ResponseEntity.noContent().build();
     }
 
-    // =========================================================
-    // OBTENER ROL
-    // =========================================================
-
     private String obtenerRol(Authentication authentication) {
-
-        return authentication.getAuthorities()
-                .stream()
-                .findFirst()
-                .map(authority ->
-                        authority.getAuthority()
-                                .replace("ROLE_", "")
-                )
-                .orElse("");
+        return authentication.getAuthorities().stream().findFirst().map(authority -> authority.getAuthority().replace("ROLE_", "")).orElse("");
     }
 }
